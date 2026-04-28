@@ -5,6 +5,8 @@ export const DISCIPLINES: Discipline[] = [
   { id: 'chipping', name: 'Chipping', icon: 'chipping' },
   { id: 'simulator', name: 'Simulator', icon: 'simulator' },
   { id: 'range', name: 'Range', icon: 'range' },
+  { id: 'workout', name: 'Workout', icon: 'workout' },
+  { id: 'golf', name: 'Golf', icon: 'golf' },
 ]
 
 export const getDiscipline = (id: string) =>

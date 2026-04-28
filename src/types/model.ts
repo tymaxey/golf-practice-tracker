@@ -69,6 +69,7 @@ export type DrillResult = {
   metric: string
   label: string
   value: number
+  text?: string
   denominator?: number
   unit?: string
 }

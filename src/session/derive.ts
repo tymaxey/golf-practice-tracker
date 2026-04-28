@@ -70,6 +70,8 @@ export function exportHeadline(session: Session): string {
 }
 
 export function headlineSummary(session: Session): string {
+  if (session.disciplineId === 'golf') return golfSummary(session)
+
   const parts: string[] = []
   const fives = fivesRate(session)
   if (fives) parts.push(`5-ft ${fives.value}/${fives.denominator}`)
@@ -77,7 +79,27 @@ export function headlineSummary(session: Session): string {
   if (ladder) parts.push(`Ladder ${ladder.value}/${ladder.denominator}`)
   const score = pressureScore(session)
   if (score !== null) parts.push(`Pressure ${formatPressure(score)}`)
-  if (parts.length === 0) return `${session.drills.length} metrics`
+  if (parts.length === 0) {
+    if (session.drills.length === 0) return session.notes || 'Logged'
+    return `${session.drills.length} metrics`
+  }
+  return parts.join(' · ')
+}
+
+function golfSummary(session: Session): string {
+  const mode = session.drills[0]?.drillDefId === 'golf-live' ? 'Live' : 'Practice'
+  const course = findResult(session, 'course')?.text
+  const holes = findResult(session, 'holes')?.value
+  const score = findResult(session, 'score')?.value
+  const parts: string[] = [mode]
+  if (course) parts.push(course)
+  if (holes !== undefined && score !== undefined) {
+    parts.push(`${holes}h · ${score}`)
+  } else if (score !== undefined) {
+    parts.push(String(score))
+  } else if (holes !== undefined) {
+    parts.push(`${holes}h`)
+  }
   return parts.join(' · ')
 }
 

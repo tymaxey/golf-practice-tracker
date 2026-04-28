@@ -3,6 +3,19 @@
 A reference for generating new drill configs in this codebase. Self-contained:
 nothing here requires reading other files.
 
+## Scope of this guide
+
+Use this guide for **practice disciplines that fit the metric-stepper flow**:
+Putting, Chipping, Simulator, Range. The user picks a discipline → walks one
+drill at a time → review → save.
+
+**Not covered here:** Workout and Golf. Both bypass the metric stepper —
+Workout is a 3-button quick-log (no metrics, no form), Golf is a single-screen
+free-form form (Course / Holes / Score / Notes). Their sub-screens live in
+`src/screens/` and are wired directly in `App.tsx`. Adding more disciplines of
+that shape is a UI change, not a config change — don't squeeze them through
+this template.
+
 ## What you are generating
 
 A TypeScript module that exports a `Plan` constant. The app loads it at boot.
@@ -25,6 +38,8 @@ These types are the source of truth. A generated config must match exactly.
 type Plan = {
   id: string
   disciplineId: 'putting' | 'chipping' | 'simulator' | 'range'
+  // (workout, golf also exist as discipline IDs but use custom flows — see
+  //  "Scope of this guide" above)
   name: string
   phases: Phase[]
   isActive: boolean

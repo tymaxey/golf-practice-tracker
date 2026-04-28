@@ -1,53 +1,46 @@
 import { HeatmapCard } from '@/components/HeatmapCard'
 import { TrendsCard } from '@/components/TrendsCard'
+import { getDiscipline } from '@/config/disciplines'
 import { headlineSummary } from '@/session/derive'
-import type { Session } from '@/types/model'
+import type { Plan, Session } from '@/types/model'
 
 type HomeProps = {
-  planName: string
+  plans: Plan[]
   sessions: Session[]
-  onStart: () => void
+  onStart: (planId: string) => void
   onOpenSession: (id: string) => void
-  onOpenSettings: () => void
 }
 
 export function Home({
-  planName,
+  plans,
   sessions,
   onStart,
   onOpenSession,
-  onOpenSettings,
 }: HomeProps) {
   const todayCount = sessions.filter(isToday).length
   const recent = sessions.slice(0, 7)
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col gap-6 p-5 pb-24">
-      <header className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-xs uppercase tracking-wide text-ink-400">
-            Practice Tracker
-          </div>
-          <h1 className="text-xl font-semibold">{planName}</h1>
-          <div className="mt-1 text-sm text-ink-400">{todayLabel(todayCount)}</div>
-        </div>
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label="Settings"
-          className="tap -mr-2 rounded-full p-2 text-ink-400 active:bg-ink-800 active:text-ink-200"
-        >
-          <GearIcon />
-        </button>
-      </header>
+    <div className="mx-auto flex min-h-full max-w-md flex-col gap-6 px-5 pb-24 pt-3">
+      <div className="text-sm text-ink-400">{todayLabel(todayCount)}</div>
 
-      <button
-        type="button"
-        onClick={onStart}
-        className="tap w-full rounded-2xl bg-accent-500 py-5 text-base font-semibold text-ink-950 active:opacity-80"
-      >
-        {todayCount > 0 ? 'Start another session' : 'Start session'}
-      </button>
+      <section className="flex flex-col gap-3">
+        {plans.map((plan) => {
+          const disc = getDiscipline(plan.disciplineId)
+          return (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => onStart(plan.id)}
+              className="tap flex w-full rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
+            >
+              <span className="text-base font-semibold">
+                {disc?.name ?? plan.disciplineId}
+              </span>
+            </button>
+          )
+        })}
+      </section>
 
       <TrendsCard sessions={sessions} />
 
@@ -72,7 +65,9 @@ export function Home({
         )}
       </section>
 
-      <HeatmapCard sessions={sessions} />
+      <HeatmapCard
+        sessions={sessions.filter((s) => s.disciplineId !== 'golf')}
+      />
     </div>
   )
 }
@@ -86,6 +81,7 @@ function RecentSessionCard({
 }) {
   const date = new Date(session.startedAt)
   const summary = headlineSummary(session)
+  const disc = getDiscipline(session.disciplineId)
   return (
     <li>
       <button
@@ -94,7 +90,9 @@ function RecentSessionCard({
         className="tap flex w-full flex-col gap-2 rounded-xl bg-ink-900 p-4 text-left active:bg-ink-800"
       >
         <div className="flex items-center justify-between text-xs text-ink-400">
-          <span>{formatDate(date)}</span>
+          <span>
+            {disc?.name ?? session.disciplineId} · {formatDate(date)}
+          </span>
           <span className="tabular-nums">{formatTime(date)}</span>
         </div>
         <div className="text-sm text-ink-200">{summary}</div>
@@ -134,21 +132,3 @@ function formatTime(d: Date): string {
   })
 }
 
-function GearIcon() {
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  )
-}

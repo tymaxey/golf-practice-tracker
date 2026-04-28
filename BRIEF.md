@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M5 landed; v1 ship gate met
-**Version:** v0.7 (2026-04-28)
+**Status:** M5 landed; five disciplines wired (Putting/Chipping/Simulator/Workout/Golf); v1 ship gate met
+**Version:** v0.9 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -26,7 +26,12 @@ These are not negotiable.
 
 ### In scope (v1)
 
-- Putting discipline only (one plan: Break 80 — Putting Phase 1, three drill blocks)
+- Five active disciplines on the Home picker:
+  - Putting (3 drills, full metric flow)
+  - Chipping (2 drills, full metric flow)
+  - Simulator R10 (4 drills, full metric flow)
+  - Workout (sub-picker: GolfForever / Run / Mobility — quick-log, no metrics)
+  - Golf (sub-picker: Live / Practice — free-form: course, holes, score, notes; excluded from habit heatmap)
 - Multiple sessions per day
 - Post-save session edit
 - Last-7 history list, sparkline trends on 3 key metrics
@@ -38,7 +43,7 @@ These are not negotiable.
 
 ### Out of scope (v1, reserved for v2+)
 
-- Chipping, simulator, range disciplines (data model supports them; no UI/plans yet)
+- Range discipline (data model supports it; no plan yet)
 - Garmin R10 CSV import
 - Image attachments (strike pattern photos)
 - Cross-discipline dashboard
@@ -126,6 +131,7 @@ type DrillResult = {
   metric: string                  // matches MetricDef.key
   label: string
   value: number
+  text?: string                   // optional free-form text (e.g., golf course name)
   denominator?: number
   unit?: string
 }
@@ -166,13 +172,94 @@ Plans, phases, and drill defs are seeded from JSON-config-in-repo at `src/config
 | pressure_score | Cumulative score | derived | sum of taps |
 | pressure_distribution | Counts per outcome | derived | tally |
 
+## 7a. Chipping Phase 1 protocol (seed data)
+
+Maintenance plan for park sessions (~30 min, 1–2× weekly). All metrics use `success_total` for fast entry.
+
+### Drill A — Distance Control (15 min)
+
+| metric key | label | input | range |
+|---|---|---|---|
+| chip_within_3ft | Chips within 3 ft / attempts | success_total | 0–N |
+| chip_within_6ft | Chips within 6 ft / attempts | success_total | 0–N |
+
+### Drill B — Lie Variety (10 min)
+
+| metric key | label | input | range |
+|---|---|---|---|
+| chip_lie_acceptable | Acceptable outcomes / attempts | success_total | 0–N |
+
+## 7b. Simulator (R10) Phase 1 protocol (seed data)
+
+Garage R10 sessions. Drill keys are prefixed `sim_` to avoid collisions.
+
+### Drill A — Setup Verification (5 min)
+
+| metric key | label | input | range |
+|---|---|---|---|
+| setup_photos_taken | Photos taken (face-on + DTL) | counter | 0–2 |
+| lead_hand_knuckles | Lead hand knuckles visible (target ~3) | counter | 0–3 |
+
+### Drill B — Smart Ball Warm-up (10 min)
+
+| metric key | label | input | range |
+|---|---|---|---|
+| smart_ball_reps | Reps with ball held | counter | 0–N |
+| connection_feel | Connection feel (1=lost, 5=locked in) | counter | 1–5 |
+
+### Drill C — 7-iron Face Control Block (25 min)
+
+| metric key | label | input | range |
+|---|---|---|---|
+| sim_7i_balls_hit | 7-iron balls hit | counter | 0–N |
+| sim_7i_face_angle_avg | 7i face angle avg (° — + open / − closed) | numeric | — |
+| sim_7i_face_angle_sd | 7i face angle SD (°) | numeric | — |
+| sim_7i_smash_avg | 7i smash factor avg | numeric | — |
+
+### Drill D — Multi-Club Face Check (optional, 10 min)
+
+Phase-2 dry-run; not all R10 sessions hit this block.
+
+| metric key | label | input | range |
+|---|---|---|---|
+| sim_driver_face_avg | Driver face angle avg (°) | numeric | — |
+| sim_driver_smash_avg | Driver smash avg | numeric | — |
+| sim_4h_face_avg | 4H face angle avg (°) | numeric | — |
+| sim_wedge_face_avg | Wedge face angle avg (°) | numeric | — |
+
+## 7c. Workout (placeholder, no metrics)
+
+Quick-log surface for cross-training. Tapping the Workout button on Home opens a sub-picker with three options; tapping any option immediately creates a session and returns Home. The chosen option name is stored in `session.notes` so Recent reads "Workout · Run" etc. No drills, no metrics, no per-option tracking yet.
+
+| drill id | label | input | persistence |
+|---|---|---|---|
+| workout-golfforever | GolfForever | (none) | session.notes = "GolfForever", drills = [] |
+| workout-run | Run | (none) | session.notes = "Run", drills = [] |
+| workout-mobility | Mobility | (none) | session.notes = "Mobility", drills = [] |
+
+Workout sessions appear in the heatmap (cross-training is part of the habit) and are uneditable from Recent (tap is a no-op).
+
+## 7d. Golf (Live / Practice, free-form)
+
+Round-logging surface, separate from practice. Tapping Golf opens a sub-picker (Live | Practice). Tapping a mode opens a single-screen form:
+
+| field | input | persistence |
+|---|---|---|
+| Course | text | DrillResult `{ metric: 'course', text }` (only if non-empty) |
+| Holes played | numeric | DrillResult `{ metric: 'holes', value }` (only if non-empty) |
+| Score | numeric | DrillResult `{ metric: 'score', value }` (only if non-empty) |
+| Notes | textarea | session.notes |
+
+All fields optional; submit always allowed. `drillDefId` distinguishes Live (`golf-live`) from Practice (`golf-practice`). Recent renders e.g. "Live · Pebble Beach · 18h · 87" via a golf-specific summary path in `derive.ts`. **Golf sessions are excluded from the habit heatmap** — playing isn't practicing — but they do count toward the today-session badge. Like Workout, golf sessions are uneditable from Recent.
+
 ## 8. UX requirements
 
 - Portrait-first, single-thumb
 - Tap targets ≥ 44×44 pt
 - Counters / steppers for numbers, never raw text input
 - Numeric keypad only when text input is unavoidable
-- **Home screen:** today's session status (active / not started / completed) → start CTA → last 3 sessions with key metrics → habit heatmap below
+- **Global header:** logo on the left (taps return Home, with discard-confirm if a session draft is in progress), settings gear on the right (Home only). Rendered above every screen.
+- **Home screen:** today-session count → stack of green-outlined discipline buttons (one per active plan) → trends → recent sessions → habit heatmap. Discipline buttons are visually identical (no implied "primary" action).
 - **In-session:** one drill per screen, all inputs visible without scrolling on iPhone 14+
 - **Review screen:** edit-on-tap fields + notes textarea + Save CTA
 - Save confirmation: toast + return home with today marked complete
@@ -294,8 +381,18 @@ Each milestone is independently demoable.
 | 2026-04-28 | §11 acceptance criterion "Lighthouse PWA score ≥ 90" revised — PWA category retired in Lighthouse 12 (Sept 2024) | Replaced with Performance ≥ 90 + Best-Practices ≥ 90 + Chrome DevTools "Installable" check; install requirements verified by hand. Device-install + airplane-mode test remains the truth gate |
 | 2026-04-28 | `serialize-javascript` advisory closed via `overrides: { serialize-javascript: ^7.0.5 }` in package.json | Avoids the suggested vite-plugin-pwa downgrade (semver-major back to 0.19.x); 6→7 bump only drops Node <14 support, API unchanged. Build verified clean post-pin |
 | 2026-04-28 | Vercel deploy not part of M5 — local prod-preview is the v1 ship gate validated locally | LTE first-load timing is the only criterion that needs a real URL; deployable any time without further code changes |
+| 2026-04-28 | Multi-discipline UI shipped: Home renders one button per active plan, App flow is variable-length (`{kind:'drill'; index} \| {kind:'review'}`), recent-session cards are discipline-labeled. Chipping Phase 1 (2 drills) + Simulator R10 Phase 1 (4 drills) plans seeded | Multi-discipline data model has been load-bearing since M1; deferring the UI any longer means park-chipping and R10 sessions go unlogged. Putting button keeps accent-500; others are ink-900 to preserve "primary action" hierarchy |
+| 2026-04-28 | `headlineSummary` (and `TrendsCard`) remain putting-only for now; chipping/simulator sessions show generic `"N metrics"` in Recent and don't appear in Trends | Per-discipline summary extractors are a real design problem (which metric is the headline for chipping? for R10?), not a mechanical add. Defer until enough chipping/sim sessions exist to know what to surface |
+| 2026-04-28 | Global app header (logo + conditional gear) hoisted into `App.tsx`, rendered above every routed screen. Logo is a button: returns Home, with `confirm("Discard this session?")` if a flow-new draft is in progress; from edit/settings/picker screens it just navigates Home | Per-screen logos drift; one bar guarantees the user always has a route Home and a single mental model. Confirm path matches existing Drill cancel-button behavior |
+| 2026-04-28 | Discipline buttons all share one style (green outline, ink-950 fill, no "primary" highlight); "Phase I" sub-label removed entirely after a brief experiment | Five disciplines on one screen need parity, not hierarchy — picking is the user's job. Sub-label was redundant once each plan only has one active phase |
+| 2026-04-28 | Workout discipline added: sub-picker pattern (Home → Workout → 3 quick-log buttons → save & home). Each option creates a session with `drills: []` and `notes: optionName`; no metric tracking yet | Cross-training was going unlogged because the standard drill-stepper flow was too heavy. Sub-picker is a 2-tap entry. Three buttons (vs one) preserve which workout was done in `notes` so Recent reads "Workout · Run" |
+| 2026-04-28 | Golf discipline added: custom Live/Practice form (course / holes / score / notes, all optional); `DrillResult.text?: string` extension to store course names alongside numeric metrics; sessions excluded from habit heatmap; `headlineSummary` special-cased to render "Live · Pebble Beach · 18h · 87" | Rounds aren't practice — heatmap exclusion enforces the semantic split. Free-form fields bypass the metric-stepper entirely; the model extension (`text`) keeps storage structured rather than stuffing course into `notes`. CSV/markdown exports of golf sessions intentionally not yet wired |
+| 2026-04-28 | `headlineSummary` fallback expanded: empty-drills sessions render `session.notes \|\| "Logged"` instead of `"0 metrics"` | Workout sessions have `drills: []` by design and were rendering as "0 metrics" — confusing. The notes field carries the actionable label for these placeholder disciplines |
+| 2026-04-28 | Workout and Golf sessions are uneditable: tapping their card in Recent is a no-op. `openEdit` early-returns for both `disciplineId`s | No structured drill flow to re-enter; allowing edit would require a second custom form path. Defer until edit demand actually surfaces |
 
 ## 13. Open items
 
 - **esbuild dev-server advisory (moderate)** — dev-only request-bypass (`<=0.24.2`). Not in production bundle. Fix requires vite@8 (semver-major). Single-user dev environment, network-trusted; deferred indefinitely.
 - **vite path-traversal in `.map` handling (moderate)** — dev-only, same scope and same vite@8 fix path as above. Deferred with esbuild.
+- **Golf + Workout in CSV/markdown exports** — `src/export/format.ts` doesn't emit the new `DrillResult.text` column, so course names won't roundtrip through CSV. Markdown export's per-block renderers are putting-only; golf/workout sessions render via the generic path which prints `course: 0` for the text-bearing row. Wire up when sharing rounds with the coach actually matters.
+- **Per-discipline trends** — `TrendsCard` and `headlineSummary` headline-extractors are still putting-only (5-ft / Ladder / Pressure). Chipping/Simulator/Workout/Golf show generic fallbacks in Recent and are absent from Trends. Defer until enough non-putting sessions exist to know what to surface.
