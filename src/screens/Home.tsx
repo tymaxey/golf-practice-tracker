@@ -1,3 +1,6 @@
+import { HeatmapCard } from '@/components/HeatmapCard'
+import { TrendsCard } from '@/components/TrendsCard'
+import { headlineSummary } from '@/session/derive'
 import type { Session } from '@/types/model'
 
 type HomeProps = {
@@ -9,7 +12,7 @@ type HomeProps = {
 
 export function Home({ planName, sessions, onStart, onOpenSession }: HomeProps) {
   const todayCount = sessions.filter(isToday).length
-  const recent = sessions.slice(0, 3)
+  const recent = sessions.slice(0, 7)
 
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col gap-6 p-5 pb-24">
@@ -28,6 +31,8 @@ export function Home({ planName, sessions, onStart, onOpenSession }: HomeProps) 
       >
         {todayCount > 0 ? 'Start another session' : 'Start session'}
       </button>
+
+      <TrendsCard sessions={sessions} />
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-400">
@@ -49,6 +54,8 @@ export function Home({ planName, sessions, onStart, onOpenSession }: HomeProps) 
           </ul>
         )}
       </section>
+
+      <HeatmapCard sessions={sessions} />
     </div>
   )
 }
@@ -77,29 +84,6 @@ function RecentSessionCard({
       </button>
     </li>
   )
-}
-
-function headlineSummary(session: Session): string {
-  const parts: string[] = []
-  const find = (metric: string) =>
-    session.drills.find((d) => d.metric === metric)
-
-  const fives = find('makes_5ft')
-  if (fives && fives.denominator !== undefined && fives.denominator > 0) {
-    parts.push(`5-ft ${fives.value}/${fives.denominator}`)
-  }
-  const ladder = find('ladder_within_6')
-  if (ladder && ladder.denominator !== undefined && ladder.denominator > 0) {
-    parts.push(`Ladder ${ladder.value}/${ladder.denominator}`)
-  }
-  const score = find('pressure_score')
-  if (score) {
-    parts.push(
-      `Pressure ${score.value > 0 ? `+${score.value}` : score.value}`,
-    )
-  }
-  if (parts.length === 0) return `${session.drills.length} metrics`
-  return parts.join(' · ')
 }
 
 function isToday(s: Session): boolean {

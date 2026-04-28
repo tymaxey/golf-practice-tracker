@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M2 landed; M3 next
-**Version:** v0.4 (2026-04-28)
+**Status:** M3 landed; M4 next
+**Version:** v0.5 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -274,6 +274,10 @@ Each milestone is independently demoable.
 | 2026-04-28 | M2 landed: per-drill paging (Home → A → B → C → Review), NumberPad for capped ranges (≤12), TapButtons (good/near/bad + undo), generic MetricInput renderer, post-save edit | Validation: full putting session entry in 26.6s at 250ms/tap + 500ms screen pauses (under 30s gate) |
 | 2026-04-28 | Pressure drill persists 4 derived rows: pressure_score, pressure_good, pressure_near, pressure_bad (no raw tap sequence) | DrillResult.value is `number`; distribution can't fit one row, and §9 export only needs counts + score |
 | 2026-04-28 | Session draft is in-memory only (lost on refresh); Cancel from Drill A confirms before discard | Personal-use scope; persistence-during-flow is overkill for a 30-second entry |
+| 2026-04-28 | M3 landed: derive.ts (5-ft / ladder / pressure extractors + headlineSummary + day-bucketing), Sparkline (inline SVG), TrendsCard (last-7 sessions), HeatmapCard (90-day, count-graded, discipline-aware aggregation), Home expanded to 7 recent | Validation: seeded 14-day arc shows trends + filled heatmap on iPhone-mobile preview |
+| 2026-04-28 | History lives on Home (no new route, no tab strip); sparklines key on last-N **sessions**, heatmap on last-N **days** | Single-screen mobile-first; performance-over-reps and habit-over-days are separate questions and shouldn't fight for the same axis |
+| 2026-04-28 | Heatmap is count-graded (0/1/2/3+), discipline-aware internally, single-color UI today | Honors multi-discipline data-model rule without shipping unused per-discipline color split |
+| 2026-04-28 | Heatmap window: rolling 90 days, 13 weeks × 7 days | 365-day grid doesn't fit portrait at 375pt; 30 too sparse to read as a habit |
 
 ## 13. Open items
 
