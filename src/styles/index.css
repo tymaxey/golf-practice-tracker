@@ -12,6 +12,10 @@
     @apply bg-ink-950 text-ink-200 font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   button {
     @apply select-none;
