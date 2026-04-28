@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** Locked for M1 build
-**Version:** v0.3 (2026-04-28)
+**Status:** M2 landed; M3 next
+**Version:** v0.4 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -271,6 +271,9 @@ Each milestone is independently demoable.
 | 2026-04-28 | Plans/phases/drills as static TS imports, not Dexie | Adding a plan = new file + restart, per §6; sessions are the only Dexie table |
 | 2026-04-28 | Tailwind v3 over v4 | Plugin ecosystem maturity; bundle size equivalent |
 | 2026-04-28 | M1 landed: scaffold, types, Dexie sessions store, Putting Phase 1 seed (full 3 drills), Face Control save/reload UI | Validation: saved session persists across page reload (verified in dev) |
+| 2026-04-28 | M2 landed: per-drill paging (Home → A → B → C → Review), NumberPad for capped ranges (≤12), TapButtons (good/near/bad + undo), generic MetricInput renderer, post-save edit | Validation: full putting session entry in 26.6s at 250ms/tap + 500ms screen pauses (under 30s gate) |
+| 2026-04-28 | Pressure drill persists 4 derived rows: pressure_score, pressure_good, pressure_near, pressure_bad (no raw tap sequence) | DrillResult.value is `number`; distribution can't fit one row, and §9 export only needs counts + score |
+| 2026-04-28 | Session draft is in-memory only (lost on refresh); Cancel from Drill A confirms before discard | Personal-use scope; persistence-during-flow is overkill for a 30-second entry |
 
 ## 13. Open items
 
