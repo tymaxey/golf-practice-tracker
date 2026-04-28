@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M4 landed; M5 next
-**Version:** v0.6 (2026-04-28)
+**Status:** M5 landed; v1 ship gate met
+**Version:** v0.7 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -240,7 +240,7 @@ One row per drill result. Columns:
 | M2 — Full putting protocol | All 3 drill blocks, session save flow, post-save edit | Save full putting session in <30s |
 | M3 — History & habits | Last-7 list, sparkline trends, calendar heatmap across disciplines | Week of data shows trends + heatmap |
 | M4 — Export & settings | Markdown single + range, CSV, settings page | Pastes cleanly into chat |
-| M5 — PWA polish | Manifest, service worker, offline test, install | Installs on iOS, works in airplane mode |
+| M5 — PWA polish | Manifest, service worker, offline test, install | Installs on iOS, works in airplane mode (locally validated; real-device install pending) |
 
 Each milestone is independently demoable.
 
@@ -251,7 +251,7 @@ Each milestone is independently demoable.
 - 30 days of daily use without data loss
 - Markdown export pastes into chat with zero cleanup
 - First load <2s on LTE; subsequent loads <500ms
-- Lighthouse PWA score ≥ 90
+- Lighthouse Performance ≥ 90, Best-Practices ≥ 90, and Chrome DevTools "Installable" passes (PWA category was retired in Lighthouse 12; install requirements verified by hand: manifest with maskable icon, registered SW, apple-touch-icon, theme-color)
 - Zero external network requests after first load (DevTools verified)
 
 ## 12. Decisions log
@@ -285,8 +285,17 @@ Each milestone is independently demoable.
 | 2026-04-28 | Empty-range UX: status line + disabled Copy/CSV buttons (no toast, no silent empty export) | Honors §2 "no silent failures" without being noisy on a state the user is already looking at |
 | 2026-04-28 | Single-session export entry points: Settings → "Pick a session" + Review (edit-mode) → "Copy markdown". Recent-session card on Home stays read-only | Long-press / swipe affordances are invisible; explicit buttons in two existing surfaces are discoverable |
 | 2026-04-28 | Range markdown: one summary-table row per session (not per day), with `MM-DD` date column | Multiple sessions per day is a first-class case (§3); collapsing to days hides per-session detail the user may want |
+| 2026-04-28 | M5 landed: manifest icons (svg + 192/512/512-maskable), `apple-touch-icon`, `mobile-web-app-capable` meta, `apple-mobile-web-app-title`, `navigator.storage.persist()` at startup, `serialize-javascript` pinned via npm `overrides` | Validation: prod-preview build emits 10 precache entries, SW intercepts (transferSize 0 on reload), zero external requests, Lighthouse Performance 100 / Best-Practices 100, no console warnings |
+| 2026-04-28 | Icon: text-based lowercase "p" mark, accent-500 (`#22c55e`) glyph on ink-950 (`#0a0a0a`) bg, single SVG source rendered to PNG via `rsvg-convert` (Homebrew librsvg, build-time only); same source serves both `any` and `maskable` purposes — glyph bbox sits inside the maskable safe zone | Single SVG file is the source of truth; PNGs are committed under `public/`; no npm dep added; honors §2 "no external CDN" |
+| 2026-04-28 | Splash screens: skipped — accept iOS launch white-flash | 8+ device-size matrix not worth single-user polish; revisit in v1.1 only if it grates |
+| 2026-04-28 | Install-prompt UX: passive (Safari share-sheet → Add to Home Screen). No banner, no hint card | Single-user, owner knows the iOS gesture; prompt UI is dead code |
+| 2026-04-28 | Workbox: trust `generateSW` defaults — precache all build output + `NavigationRoute` fallback to `index.html` | Pure-static app, no external; no `globPatterns` override needed |
+| 2026-04-28 | `navigator.storage.persist()` called once at app startup (best-effort) | iOS only grants persistence post-install; the call is cheap and serves §11 "30 days without data loss" by guarding IndexedDB against storage-pressure eviction |
+| 2026-04-28 | §11 acceptance criterion "Lighthouse PWA score ≥ 90" revised — PWA category retired in Lighthouse 12 (Sept 2024) | Replaced with Performance ≥ 90 + Best-Practices ≥ 90 + Chrome DevTools "Installable" check; install requirements verified by hand. Device-install + airplane-mode test remains the truth gate |
+| 2026-04-28 | `serialize-javascript` advisory closed via `overrides: { serialize-javascript: ^7.0.5 }` in package.json | Avoids the suggested vite-plugin-pwa downgrade (semver-major back to 0.19.x); 6→7 bump only drops Node <14 support, API unchanged. Build verified clean post-pin |
+| 2026-04-28 | Vercel deploy not part of M5 — local prod-preview is the v1 ship gate validated locally | LTE first-load timing is the only criterion that needs a real URL; deployable any time without further code changes |
 
 ## 13. Open items
 
-- **vite-plugin-pwa transitive advisory** — `serialize-javascript` (high) reaches the dep tree via `vite-plugin-pwa → workbox-build → @rollup/plugin-terser`. Build-time only, no runtime exposure. Revisit before M5 / first deploy: check for an upstream `vite-plugin-pwa` release that pins the fix, or pin via overrides.
-- **esbuild dev-server advisory (moderate)** — dev-only request-bypass. Not in production bundle. Track for fix in next vite minor.
+- **esbuild dev-server advisory (moderate)** — dev-only request-bypass (`<=0.24.2`). Not in production bundle. Fix requires vite@8 (semver-major). Single-user dev environment, network-trusted; deferred indefinitely.
+- **vite path-traversal in `.map` handling (moderate)** — dev-only, same scope and same vite@8 fix path as above. Deferred with esbuild.
