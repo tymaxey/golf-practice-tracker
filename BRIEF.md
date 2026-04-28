@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M3 landed; M4 next
-**Version:** v0.5 (2026-04-28)
+**Status:** M4 landed; M5 next
+**Version:** v0.6 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -278,6 +278,13 @@ Each milestone is independently demoable.
 | 2026-04-28 | History lives on Home (no new route, no tab strip); sparklines key on last-N **sessions**, heatmap on last-N **days** | Single-screen mobile-first; performance-over-reps and habit-over-days are separate questions and shouldn't fight for the same axis |
 | 2026-04-28 | Heatmap is count-graded (0/1/2/3+), discipline-aware internally, single-color UI today | Honors multi-discipline data-model rule without shipping unused per-discipline color split |
 | 2026-04-28 | Heatmap window: rolling 90 days, 13 weeks × 7 days | 365-day grid doesn't fit portrait at 375pt; 30 too sparse to read as a habit |
+| 2026-04-28 | M4 landed: derive helpers (`pressureDistribution`, `formatDuration`, `exportHeadline`), `src/export/format.ts` (markdown single + range, CSV), `src/export/share.ts` (clipboard / Web Share / download fallback), Settings screen with range picker + single-session picker + clear-all confirm, gear icon on Home, Copy-markdown action on Review (edit) | Validation: Last-7 export of 9 sessions paste-clean per §9, CSV 76-row export with quoted fields, empty-range disables Copy button, clear-all dual-confirm |
+| 2026-04-28 | Markdown export uses percentages in headline (`5-ft 70%`); recent-session card on Home keeps raw fractions (`5-ft 7/10`) | Coaching-chat target is human-readable; on-device card is a quick at-a-glance scan and fractions pack better |
+| 2026-04-28 | Range presets `Last 7 / Last 30 / This month`; `Custom range` reveals two `<input type="date">` fields | 95% of share-with-coach flows are recent-window; native iOS date pickers are heavy and only worth the friction when needed |
+| 2026-04-28 | Markdown → clipboard always; CSV → `navigator.share` with `File` if supported, else `<a download>` blob fallback | §11 "pastes cleanly into chat" maps directly to clipboard for markdown; CSV is a file, share-sheet gives the cleanest iOS-PWA UX when available |
+| 2026-04-28 | Empty-range UX: status line + disabled Copy/CSV buttons (no toast, no silent empty export) | Honors §2 "no silent failures" without being noisy on a state the user is already looking at |
+| 2026-04-28 | Single-session export entry points: Settings → "Pick a session" + Review (edit-mode) → "Copy markdown". Recent-session card on Home stays read-only | Long-press / swipe affordances are invisible; explicit buttons in two existing surfaces are discoverable |
+| 2026-04-28 | Range markdown: one summary-table row per session (not per day), with `MM-DD` date column | Multiple sessions per day is a first-class case (§3); collapsing to days hides per-session detail the user may want |
 
 ## 13. Open items
 

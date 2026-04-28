@@ -22,6 +22,20 @@ export function pressureScore(s: Session): number | null {
   return r ? r.value : null
 }
 
+export type PressureDistribution = { good: number; near: number; bad: number }
+
+export function pressureDistribution(s: Session): PressureDistribution | null {
+  const good = findResult(s, 'pressure_good')
+  const near = findResult(s, 'pressure_near')
+  const bad = findResult(s, 'pressure_bad')
+  if (!good && !near && !bad) return null
+  return {
+    good: good?.value ?? 0,
+    near: near?.value ?? 0,
+    bad: bad?.value ?? 0,
+  }
+}
+
 export function ratePct(r: Rate): number {
   return r.denominator === 0 ? 0 : r.value / r.denominator
 }
@@ -32,6 +46,27 @@ export function formatPct(r: Rate): string {
 
 export function formatPressure(score: number): string {
   return score > 0 ? `+${score}` : `${score}`
+}
+
+export function formatDuration(startedAt: string, endedAt: string | null): string {
+  if (!endedAt) return '—'
+  const ms = new Date(endedAt).getTime() - new Date(startedAt).getTime()
+  if (!Number.isFinite(ms) || ms < 0) return '—'
+  const totalSec = Math.round(ms / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  return `${m}m ${String(s).padStart(2, '0')}s`
+}
+
+export function exportHeadline(session: Session): string {
+  const parts: string[] = []
+  const fives = fivesRate(session)
+  if (fives) parts.push(`5-ft ${formatPct(fives)}`)
+  const ladder = ladderRate(session)
+  if (ladder) parts.push(`Ladder ${formatPct(ladder)}`)
+  const score = pressureScore(session)
+  if (score !== null) parts.push(`Pressure ${formatPressure(score)}`)
+  return parts.join(' · ')
 }
 
 export function headlineSummary(session: Session): string {

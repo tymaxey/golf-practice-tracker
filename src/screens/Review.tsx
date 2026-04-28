@@ -12,6 +12,7 @@ type ReviewProps = {
   onSave: () => void
   saving: boolean
   mode: 'new' | 'edit'
+  onExport?: () => void
 }
 
 export function Review({
@@ -24,6 +25,7 @@ export function Review({
   onSave,
   saving,
   mode,
+  onExport,
 }: ReviewProps) {
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col gap-5 p-5 pb-24">
@@ -93,6 +95,17 @@ export function Review({
             ? 'Save changes'
             : 'Save session'}
       </button>
+
+      {mode === 'edit' && onExport && (
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={saving}
+          className="tap w-full rounded-2xl bg-ink-800 py-4 text-sm font-semibold text-ink-100 active:bg-ink-700 disabled:opacity-40"
+        >
+          Copy markdown
+        </button>
+      )}
     </div>
   )
 }

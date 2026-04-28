@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Toast } from '@/components/Toast'
 import { ACTIVE_PLAN_FOR_DISCIPLINE } from '@/config/plans'
-import { createSession, getSession, listSessions, updateSession } from '@/db'
+import { clearAll, createSession, getSession, listSessions, updateSession } from '@/db'
+import { markdownSession } from '@/export/format'
+import { copyText } from '@/export/share'
 import { Drill } from '@/screens/Drill'
 import { Home } from '@/screens/Home'
 import { Review } from '@/screens/Review'
+import { Settings } from '@/screens/Settings'
 import {
   emptyDraft,
   hydrateDraft,
@@ -18,6 +21,7 @@ type Step = 'drill0' | 'drill1' | 'drill2' | 'review'
 
 type Screen =
   | { kind: 'home' }
+  | { kind: 'settings' }
   | { kind: 'flow'; step: Step; mode: 'new'; editingId?: undefined }
   | { kind: 'flow'; step: 'review'; mode: 'edit'; editingId: string }
 
@@ -75,6 +79,19 @@ export default function App() {
     setDraft((d) => (d ? { ...d, notes } : d))
   }
 
+  const handleExportEditing = async () => {
+    if (screen.kind !== 'flow' || screen.mode !== 'edit') return
+    const s = await getSession(screen.editingId)
+    if (!s) return
+    const ok = await copyText(markdownSession(s))
+    setToast(ok ? 'Copied session' : 'Copy failed')
+  }
+
+  const handleClearAll = async () => {
+    await clearAll()
+    setSessions([])
+  }
+
   const handleSave = async () => {
     if (!draft || saving) return
     setSaving(true)
@@ -114,6 +131,16 @@ export default function App() {
           sessions={sessions}
           onStart={startNew}
           onOpenSession={openEdit}
+          onOpenSettings={() => setScreen({ kind: 'settings' })}
+        />
+      )}
+
+      {screen.kind === 'settings' && (
+        <Settings
+          sessions={sessions}
+          onBack={goHome}
+          onClearAll={handleClearAll}
+          onToast={(m) => setToast(m)}
         />
       )}
 
@@ -144,6 +171,7 @@ export default function App() {
           onSave={handleSave}
           saving={saving}
           mode="edit"
+          onExport={handleExportEditing}
         />
       )}
 
