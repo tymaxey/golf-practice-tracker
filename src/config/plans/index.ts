@@ -7,10 +7,10 @@ import { GOLF_PLAN } from './golf'
 import { COACHING_PLAN } from './coaching'
 
 export const PLANS: Plan[] = [
-  PUTTING_PHASE_1,
-  CHIPPING_PHASE_1,
-  SIMULATOR_PHASE_1,
   WORKOUT_PLAN,
+  PUTTING_PHASE_1,
+  SIMULATOR_PHASE_1,
+  CHIPPING_PHASE_1,
   GOLF_PLAN,
   COACHING_PLAN,
 ]
