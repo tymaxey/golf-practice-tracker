@@ -60,22 +60,17 @@ def make_background():
     return bg
 
 
-def draw_tagline(canvas):
-    """'Track drills.' (accent) + 'Build skills.' (white) — two lines,
-    centered, restrained scale. Lives in the upper third above the phone."""
+def draw_tagline(canvas, line1, line2):
+    """Two-line tagline: line1 in accent, line2 in white. Centered,
+    restrained scale. Lives in the upper third above the phone."""
     draw = ImageDraw.Draw(canvas)
     font = load_font(132)
 
-    line1 = "Track drills."
-    line2 = "Build skills."
-
-    # Anchor each line by its bbox center
     bbox1 = draw.textbbox((0, 0), line1, font=font)
     bbox2 = draw.textbbox((0, 0), line2, font=font)
     w1, h1 = bbox1[2] - bbox1[0], bbox1[3] - bbox1[1]
     w2, h2 = bbox2[2] - bbox2[0], bbox2[3] - bbox2[1]
     line_gap = 18
-    total_h = h1 + h2 + line_gap
     top_y = 220
 
     draw.text(((W - w1) // 2 - bbox1[0], top_y - bbox1[1]),
@@ -143,9 +138,9 @@ def place_phone(canvas, screenshot_path):
     canvas.paste(raw, (sx, sy), mask)
 
 
-def compose(raw_path, out_path, index, total):
+def compose(raw_path, out_path, index, total, tagline):
     bg = make_background().convert("RGBA")
-    draw_tagline(bg)
+    draw_tagline(bg, tagline[0], tagline[1])
     place_phone(bg, raw_path)
     draw_footer(bg, index, total)
     bg.convert("RGB").save(out_path, "PNG", optimize=True)
@@ -156,12 +151,12 @@ def main():
     here = Path(__file__).parent
     raw = here / "raw"
     shots = [
-        ("01-home-top.png", "01-pick.png"),
-        ("02-review.png",   "02-review.png"),
-        ("03-progress.png", "03-build.png"),
+        ("01-home-top.png", "01-pick.png",   ("Track",      "6 disciplines.")),
+        ("02-review.png",   "02-review.png", ("Fast, easy", "data entry.")),
+        ("03-progress.png", "03-build.png",  ("Review and", "share progress.")),
     ]
-    for i, (src, dst) in enumerate(shots, 1):
-        compose(raw / src, here / dst, i, len(shots))
+    for i, (src, dst, tagline) in enumerate(shots, 1):
+        compose(raw / src, here / dst, i, len(shots), tagline)
 
 
 if __name__ == "__main__":

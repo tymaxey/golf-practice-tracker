@@ -2,6 +2,8 @@
 
 A golf practice tracker.
 
+_Track drills, build skills._
+
 <p align="center">
   <img src="./docs/screenshots/01-pick.png" alt="PROTOCOL home — discipline picker, trends, recent sessions" width="32%" />
   <img src="./docs/screenshots/02-review.png" alt="PROTOCOL session — face control, distance, pressure metrics" width="32%" />
