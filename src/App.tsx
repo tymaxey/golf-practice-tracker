@@ -139,7 +139,7 @@ export default function App() {
 
       const now = new Date().toISOString()
       await createSession({
-        startedAt: now,
+        startedAt: data.startedAt,
         endedAt: now,
         disciplineId: plan.disciplineId,
         planId: plan.id,
@@ -166,7 +166,7 @@ export default function App() {
       const drillResults = serializeCoachingForm(data)
       const now = new Date().toISOString()
       await createSession({
-        startedAt: now,
+        startedAt: data.startedAt,
         endedAt: now,
         disciplineId: plan.disciplineId,
         planId: plan.id,
@@ -187,6 +187,7 @@ export default function App() {
     setSaving(true)
     try {
       await updateSession(id, {
+        startedAt: data.startedAt,
         notes: '',
         drills: serializeCoachingForm(data),
       })

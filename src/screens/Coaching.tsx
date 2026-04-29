@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { DateStripPicker } from '@/components/DateStripPicker'
 import type { DrillResult, Session } from '@/types/model'
 
 export type CoachingFormData = {
+  startedAt: string
   lessonTitle: string
   coach: string
   location: string
@@ -27,6 +29,7 @@ const FIELD_KEYS: Array<{ metric: string; label: string; key: keyof CoachingForm
 ]
 
 export const emptyCoachingForm = (): CoachingFormData => ({
+  startedAt: new Date().toISOString(),
   lessonTitle: '',
   coach: '',
   location: '',
@@ -42,6 +45,7 @@ export function extractCoachingForm(s: Session): CoachingFormData {
   const get = (m: string) =>
     s.drills.find((d) => d.metric === m)?.text ?? ''
   return {
+    startedAt: s.startedAt,
     lessonTitle: get('lesson_title'),
     coach: get('coach'),
     location: get('location'),
@@ -156,6 +160,11 @@ export function CoachingForm({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
           Lesson
         </h2>
+
+        <DateStripPicker
+          value={data.startedAt}
+          onChange={(iso) => set('startedAt', iso)}
+        />
 
         <Field label="Lesson title">
           <input

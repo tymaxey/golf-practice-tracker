@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { DateStripPicker } from '@/components/DateStripPicker'
 import type { DrillDef } from '@/types/model'
 
 export type GolfFormData = {
+  startedAt: string
   course: string
   holes: string
   score: string
@@ -52,6 +54,7 @@ type GolfFormProps = {
 }
 
 export function GolfForm({ mode, saving, onBack, onSubmit }: GolfFormProps) {
+  const [startedAt, setStartedAt] = useState(() => new Date().toISOString())
   const [course, setCourse] = useState('')
   const [holes, setHoles] = useState('')
   const [score, setScore] = useState('')
@@ -59,7 +62,7 @@ export function GolfForm({ mode, saving, onBack, onSubmit }: GolfFormProps) {
 
   const submit = () => {
     if (saving) return
-    onSubmit({ course, holes, score, notes })
+    onSubmit({ startedAt, course, holes, score, notes })
   }
 
   const heading = mode === 'live' ? 'Golf — Live' : 'Golf — Practice'
@@ -78,6 +81,8 @@ export function GolfForm({ mode, saving, onBack, onSubmit }: GolfFormProps) {
       </header>
 
       <section className="flex flex-col gap-4">
+        <DateStripPicker value={startedAt} onChange={setStartedAt} />
+
         <Field label="Course">
           <input
             type="text"
