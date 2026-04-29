@@ -396,9 +396,14 @@ function AppHeader({ onLogo, onSettings }: AppHeaderProps) {
         type="button"
         onClick={onLogo}
         aria-label="Home"
-        className="tap -ml-1 rounded-xl p-1 active:opacity-70"
+        className="tap -ml-1 max-w-[33%] rounded-xl p-1 text-left active:opacity-70"
       >
-        <img src="/icon.svg" alt="Practice Tracker" className="h-10 w-10 rounded-lg" />
+        <span
+          className="block text-xl font-medium uppercase tracking-wider text-accent-500"
+          style={{ fontFamily: '"Avenir Next", Avenir, system-ui, sans-serif' }}
+        >
+          PROTOCOL
+        </span>
       </button>
       {onSettings ? (
         <button

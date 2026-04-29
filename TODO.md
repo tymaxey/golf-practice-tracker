@@ -2,21 +2,21 @@
 
 Deferred items, ordered by interest. Move to BRIEF Decisions log when shipped.
 
-## Branding refresh — new icon + wordmark
+## Branding refresh — replace interim wordmark + P with final glyph
 
-Replace the placeholder flag-pin icon with the new "G" glyph and add the wordmark to the in-app header.
+Currently shipping interim branding: in-app header shows "PROTOCOL" wordmark (Avenir Next Medium, accent-500), and `public/icon.svg` + the four PWA PNGs are a centered "P" in the same green on `#0a0a0a`.
 
-**Assets needed in `public/`:**
-- `icon.svg` — new glyph (replaces existing). Sources on Desktop: `icon-v1.svg`.
-- `logo.svg` — wordmark for the header. Sources on Desktop: `logo-v1.svg`.
-- `icon-192.png` (192×192) — Android.
-- `icon-512.png` (512×512) — Android.
-- `icon-512-maskable.png` (512×512, glyph centered inside inner ~80% safe zone) — Android adaptive icons crop ~10% on each edge, so the "G" must not touch the edge.
-- `apple-touch-icon.png` (180×180) — iOS home screen.
+When the final assets are ready, replace:
+- `public/icon.svg` — final glyph. Reference designs on Desktop: `icon-v1.svg`.
+- `public/logo.svg` — final wordmark. Reference designs on Desktop: `logo-v1.svg`.
+- `public/icon-192.png` (192×192).
+- `public/icon-512.png` (512×512).
+- `public/icon-512-maskable.png` (512×512, glyph inside inner ~80% safe zone — Android adaptive icons crop ~10% per edge).
+- `public/apple-touch-icon.png` (180×180).
 
-PNGs can either be exported from the design tool (preferred — better art-direction over the maskable safe zone) or rasterized from `icon.svg` with `rsvg-convert` (already installed at `/opt/homebrew/bin/rsvg-convert`).
+PNGs can be exported from the design tool (preferred — direct control over the maskable safe zone) or rasterized from `icon.svg` with `rsvg-convert` (installed at `/opt/homebrew/bin/rsvg-convert`).
 
-**Code change:**
-- `src/App.tsx:401` — swap the header `<img src="/icon.svg" ... className="h-10 w-10 rounded-lg" />` to use `/logo.svg` with `h-10 w-auto` and drop `rounded-lg` (wordmark already has clean edges). Consider whether to keep the icon.svg as a separate small mark elsewhere.
+**Code change for the wordmark swap:**
+- `src/App.tsx` `AppHeader` — currently renders a styled `<span>PROTOCOL</span>`. Swap back to `<img src="/logo.svg" ... className="h-10 w-auto" />` (no `rounded-lg`).
 
 No manifest/`vite.config.ts` changes needed — paths stay `/icon.svg` etc.

@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <rect width="1024" height="1024" fill="#0a0a0a"/>
-  <g fill="#22c55e">
-    <rect x="320" y="240" width="128" height="544" rx="16"/>
-    <circle cx="576" cy="432" r="192"/>
-    <circle cx="576" cy="432" r="80" fill="#0a0a0a"/>
-  </g>
+  <text
+    x="512"
+    y="512"
+    font-family='"Avenir Next", Avenir, system-ui, sans-serif'
+    font-weight="500"
+    font-size="720"
+    fill="#22c55e"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >P</text>
 </svg>
