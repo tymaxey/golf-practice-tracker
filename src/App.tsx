@@ -4,6 +4,14 @@ import { PLANS, getPlan } from '@/config/plans'
 import { clearAll, createSession, getSession, listSessions, updateSession } from '@/db'
 import { markdownSession } from '@/export/format'
 import { copyText } from '@/export/share'
+import {
+  CoachingForm,
+  CoachingList,
+  CoachingView,
+  extractCoachingForm,
+  serializeCoachingForm,
+  type CoachingFormData,
+} from '@/screens/Coaching'
 import { Drill } from '@/screens/Drill'
 import { GolfForm, GolfPicker, type GolfFormData } from '@/screens/Golf'
 import { Home } from '@/screens/Home'
@@ -26,6 +34,10 @@ type Screen =
   | { kind: 'workout' }
   | { kind: 'golf-picker' }
   | { kind: 'golf-form'; drillId: 'golf-live' | 'golf-practice' }
+  | { kind: 'coaching-list' }
+  | { kind: 'coaching-new' }
+  | { kind: 'coaching-edit'; editingId: string }
+  | { kind: 'coaching-view'; viewingId: string }
   | { kind: 'flow'; planId: string; step: FlowStep; mode: 'new' }
   | {
       kind: 'flow'
@@ -66,6 +78,10 @@ export default function App() {
     }
     if (planId === 'golf') {
       setScreen({ kind: 'golf-picker' })
+      return
+    }
+    if (planId === 'coaching') {
+      setScreen({ kind: 'coaching-list' })
       return
     }
     const drills = drillsForPlan(planId)
@@ -139,6 +155,49 @@ export default function App() {
     }
   }
 
+  const saveCoaching = async (data: CoachingFormData) => {
+    if (saving) return
+    const plan = getPlan('coaching')
+    const phase = plan?.phases[0]
+    if (!plan || !phase) return
+
+    setSaving(true)
+    try {
+      const drillResults = serializeCoachingForm(data)
+      const now = new Date().toISOString()
+      await createSession({
+        startedAt: now,
+        endedAt: now,
+        disciplineId: plan.disciplineId,
+        planId: plan.id,
+        phaseId: phase.id,
+        notes: '',
+        drills: drillResults,
+      })
+      setSessions(await listSessions())
+      setToast('Saved lesson')
+      setScreen({ kind: 'coaching-list' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const updateCoaching = async (id: string, data: CoachingFormData) => {
+    if (saving) return
+    setSaving(true)
+    try {
+      await updateSession(id, {
+        notes: '',
+        drills: serializeCoachingForm(data),
+      })
+      setSessions(await listSessions())
+      setToast('Updated lesson')
+      setScreen({ kind: 'home' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const logWorkout = async (optionName: string) => {
     const plan = getPlan('workout')
     const phase = plan?.phases[0]
@@ -162,6 +221,10 @@ export default function App() {
     const s = await getSession(id)
     if (!s) return
     if (s.disciplineId === 'workout' || s.disciplineId === 'golf') return
+    if (s.disciplineId === 'coaching') {
+      setScreen({ kind: 'coaching-edit', editingId: id })
+      return
+    }
     const drills = drillsForPlan(s.planId)
     if (drills.length === 0) return
     setDraft(hydrateDraft(s, drills))
@@ -309,6 +372,44 @@ export default function App() {
         />
       )}
 
+      {screen.kind === 'coaching-list' && (
+        <CoachingList
+          sessions={sessions.filter((s) => s.disciplineId === 'coaching')}
+          onBack={goHome}
+          onAdd={() => setScreen({ kind: 'coaching-new' })}
+          onView={(id) => setScreen({ kind: 'coaching-view', viewingId: id })}
+        />
+      )}
+
+      {screen.kind === 'coaching-new' && (
+        <CoachingForm
+          mode="new"
+          saving={saving}
+          previousSession={
+            sessions.find((s) => s.disciplineId === 'coaching') ?? null
+          }
+          onBack={() => setScreen({ kind: 'coaching-list' })}
+          onSubmit={saveCoaching}
+        />
+      )}
+
+      {screen.kind === 'coaching-edit' && (
+        <CoachingEditScreen
+          editingId={screen.editingId}
+          saving={saving}
+          onBack={goHome}
+          onSubmit={(data) => updateCoaching(screen.editingId, data)}
+        />
+      )}
+
+      {screen.kind === 'coaching-view' && (
+        <CoachingViewScreen
+          viewingId={screen.viewingId}
+          sessions={sessions}
+          onBack={() => setScreen({ kind: 'coaching-list' })}
+        />
+      )}
+
       {screen.kind === 'flow' && screen.mode === 'new' && draft && (
         <FlowNew
           planId={screen.planId}
@@ -346,6 +447,73 @@ export default function App() {
       <Toast message={toast} onDismiss={() => setToast(null)} />
     </>
   )
+}
+
+type CoachingEditScreenProps = {
+  editingId: string
+  saving: boolean
+  onBack: () => void
+  onSubmit: (data: CoachingFormData) => void
+}
+
+function CoachingEditScreen({
+  editingId,
+  saving,
+  onBack,
+  onSubmit,
+}: CoachingEditScreenProps) {
+  const [initial, setInitial] = useState<CoachingFormData | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getSession(editingId).then((s) => {
+      if (cancelled || !s) return
+      setInitial(extractCoachingForm(s))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [editingId])
+
+  if (!initial) {
+    return (
+      <div className="mx-auto max-w-md px-5 pt-3 text-sm text-ink-400">
+        Loading…
+      </div>
+    )
+  }
+
+  return (
+    <CoachingForm
+      mode="edit"
+      saving={saving}
+      initial={initial}
+      onBack={onBack}
+      onSubmit={onSubmit}
+    />
+  )
+}
+
+type CoachingViewScreenProps = {
+  viewingId: string
+  sessions: Session[]
+  onBack: () => void
+}
+
+function CoachingViewScreen({
+  viewingId,
+  sessions,
+  onBack,
+}: CoachingViewScreenProps) {
+  const session = sessions.find((s) => s.id === viewingId)
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-md px-5 pt-3 text-sm text-ink-400">
+        Session not found.
+      </div>
+    )
+  }
+  return <CoachingView session={session} onBack={onBack} />
 }
 
 type WorkoutPickerProps = {

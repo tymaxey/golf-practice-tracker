@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M5 landed; five disciplines wired (Putting/Chipping/Simulator/Workout/Golf); v1 ship gate met
-**Version:** v0.9 (2026-04-28)
+**Status:** M5 landed; six disciplines wired (Putting/Chipping/Simulator/Workout/Golf/Coaching); v1 ship gate met
+**Version:** v0.10 (2026-04-28)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -389,10 +389,13 @@ Each milestone is independently demoable.
 | 2026-04-28 | Golf discipline added: custom Live/Practice form (course / holes / score / notes, all optional); `DrillResult.text?: string` extension to store course names alongside numeric metrics; sessions excluded from habit heatmap; `headlineSummary` special-cased to render "Live · Pebble Beach · 18h · 87" | Rounds aren't practice — heatmap exclusion enforces the semantic split. Free-form fields bypass the metric-stepper entirely; the model extension (`text`) keeps storage structured rather than stuffing course into `notes`. CSV/markdown exports of golf sessions intentionally not yet wired |
 | 2026-04-28 | `headlineSummary` fallback expanded: empty-drills sessions render `session.notes \|\| "Logged"` instead of `"0 metrics"` | Workout sessions have `drills: []` by design and were rendering as "0 metrics" — confusing. The notes field carries the actionable label for these placeholder disciplines |
 | 2026-04-28 | Workout and Golf sessions are uneditable: tapping their card in Recent is a no-op. `openEdit` early-returns for both `disciplineId`s | No structured drill flow to re-enter; allowing edit would require a second custom form path. Defer until edit demand actually surfaces |
+| 2026-04-28 | Coaching discipline added: GOLFTEC lesson notes container with custom form (lesson title / coach / location / prep notes / flight patterns / resolution / actions / drills assigned / summary). Single record progressively filled across pre- and post-lesson moments. Drills assigned stored as `N` rows of `metric: 'drill_assigned'` with `text`. Excluded from heatmap (lessons aren't practice); counts toward today badge. **Editable from Recent** (unique among free-form disciplines) so post-lesson sections can be filled in after the lesson. Pre-session form shows last lesson's summary + actions + drills at the top for review | Lesson notes need persistence between coaching sessions and a tight loop with practice; the prep-review card collapses the "find last session in another app" step. Edit support is required because the use case is by definition multi-touch (prep → save → return after lesson → fill post-fields). Multiple drill rows over a single newline-joined string preserves structure for future surfacing in practice flows |
+| 2026-04-28 | Coaching button on Home opens a list screen (green "Add session +" CTA + cards for past sessions) rather than jumping straight into the new-session form. Tapping a card opens a read-only `CoachingView`. Save returns to the list. Recent on Home still routes to edit | The list is the natural archive UX — past lessons are reference material, not data to re-enter. Keeping Recent → edit preserves the post-lesson fill-in path; the list adds a discoverable browse path without breaking it |
 
 ## 13. Open items
 
 - **esbuild dev-server advisory (moderate)** — dev-only request-bypass (`<=0.24.2`). Not in production bundle. Fix requires vite@8 (semver-major). Single-user dev environment, network-trusted; deferred indefinitely.
 - **vite path-traversal in `.map` handling (moderate)** — dev-only, same scope and same vite@8 fix path as above. Deferred with esbuild.
 - **Golf + Workout in CSV/markdown exports** — `src/export/format.ts` doesn't emit the new `DrillResult.text` column, so course names won't roundtrip through CSV. Markdown export's per-block renderers are putting-only; golf/workout sessions render via the generic path which prints `course: 0` for the text-bearing row. Wire up when sharing rounds with the coach actually matters.
-- **Per-discipline trends** — `TrendsCard` and `headlineSummary` headline-extractors are still putting-only (5-ft / Ladder / Pressure). Chipping/Simulator/Workout/Golf show generic fallbacks in Recent and are absent from Trends. Defer until enough non-putting sessions exist to know what to surface.
+- **Per-discipline trends** — `TrendsCard` and `headlineSummary` headline-extractors are still putting-only (5-ft / Ladder / Pressure). Chipping/Simulator/Workout/Golf/Coaching show generic fallbacks in Recent and are absent from Trends. Defer until enough non-putting sessions exist to know what to surface.
+- **Coaching in CSV/markdown exports** — same gap as Golf/Workout. Coaching's text-bearing rows (lesson_title, summary, etc.) won't roundtrip cleanly through the putting-shaped exporters. Wire alongside Golf when sharing lesson notes externally matters.

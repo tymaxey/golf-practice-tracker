@@ -7,6 +7,7 @@ export const DISCIPLINES: Discipline[] = [
   { id: 'range', name: 'Range', icon: 'range' },
   { id: 'workout', name: 'Workout', icon: 'workout' },
   { id: 'golf', name: 'Golf', icon: 'golf' },
+  { id: 'coaching', name: 'Coaching', icon: 'coaching' },
 ]
 
 export const getDiscipline = (id: string) =>

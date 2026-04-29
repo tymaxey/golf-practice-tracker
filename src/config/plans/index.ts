@@ -4,6 +4,7 @@ import { CHIPPING_PHASE_1 } from './chipping-break-80-p1'
 import { SIMULATOR_PHASE_1 } from './simulator-break-80-p1'
 import { WORKOUT_PLAN } from './workout'
 import { GOLF_PLAN } from './golf'
+import { COACHING_PLAN } from './coaching'
 
 export const PLANS: Plan[] = [
   PUTTING_PHASE_1,
@@ -11,6 +12,7 @@ export const PLANS: Plan[] = [
   SIMULATOR_PHASE_1,
   WORKOUT_PLAN,
   GOLF_PLAN,
+  COACHING_PLAN,
 ]
 
 export const ACTIVE_PLAN_FOR_DISCIPLINE = (

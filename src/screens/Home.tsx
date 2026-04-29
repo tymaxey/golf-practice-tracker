@@ -73,7 +73,9 @@ export function Home({
       </section>
 
       <HeatmapCard
-        sessions={sessions.filter((s) => s.disciplineId !== 'golf')}
+        sessions={sessions.filter(
+          (s) => s.disciplineId !== 'golf' && s.disciplineId !== 'coaching',
+        )}
       />
     </div>
   )

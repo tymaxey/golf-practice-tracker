@@ -71,6 +71,7 @@ export function exportHeadline(session: Session): string {
 
 export function headlineSummary(session: Session): string {
   if (session.disciplineId === 'golf') return golfSummary(session)
+  if (session.disciplineId === 'coaching') return coachingSummary(session)
 
   const parts: string[] = []
   const fives = fivesRate(session)
@@ -101,6 +102,20 @@ function golfSummary(session: Session): string {
     parts.push(`${holes}h`)
   }
   return parts.join(' · ')
+}
+
+function coachingSummary(session: Session): string {
+  const title = findResult(session, 'lesson_title')?.text
+  const coach = findResult(session, 'coach')?.text
+  const summary = findResult(session, 'summary')?.text
+  const prep = findResult(session, 'prep_notes')?.text
+  const parts: string[] = []
+  if (title) parts.push(title)
+  if (coach) parts.push(coach)
+  if (parts.length > 0) return parts.join(' · ')
+  if (summary) return summary.split('\n')[0].slice(0, 60)
+  if (prep) return `Prep · ${prep.split('\n')[0].slice(0, 50)}`
+  return 'Lesson'
 }
 
 export function dayKey(iso: string): string {
