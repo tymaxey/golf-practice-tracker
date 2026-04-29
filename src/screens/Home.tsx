@@ -17,7 +17,9 @@ export function Home({
   onStart,
   onOpenSession,
 }: HomeProps) {
-  const todayCount = sessions.filter(isToday).length
+  const todaySessions = sessions.filter(isToday)
+  const todayCount = todaySessions.length
+  const completedToday = new Set(todaySessions.map((s) => s.disciplineId))
   const recent = sessions.slice(0, 7)
 
   return (
@@ -27,12 +29,17 @@ export function Home({
       <section className="flex flex-col gap-3">
         {plans.map((plan) => {
           const disc = getDiscipline(plan.disciplineId)
+          const done = completedToday.has(plan.disciplineId)
           return (
             <button
               key={plan.id}
               type="button"
               onClick={() => onStart(plan.id)}
-              className="tap flex w-full rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
+              className={
+                done
+                  ? 'tap flex w-full rounded-2xl border-2 border-ink-700 px-5 py-4 text-left text-ink-400 active:bg-ink-900'
+                  : 'tap flex w-full rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900'
+              }
             >
               <span className="text-base font-semibold">
                 {disc?.name ?? plan.disciplineId}

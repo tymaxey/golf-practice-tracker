@@ -21,7 +21,7 @@ export function SuccessTotal({
           label="made"
           value={successes}
           min={0}
-          max={attempts > 0 ? attempts : undefined}
+          max={attempts}
           onChange={(v) => onChange({ successes: v, attempts })}
         />
       </div>
@@ -32,8 +32,17 @@ export function SuccessTotal({
         <Counter
           label="attempts"
           value={attempts}
-          min={Math.max(0, successes)}
-          onChange={(v) => onChange({ successes, attempts: v })}
+          min={0}
+          onChange={(nextAttempts) => {
+            const delta = nextAttempts - attempts
+            // Default an attempt to "made" — bumps successes in lockstep.
+            // User taps Made − to mark a miss after the fact.
+            const nextSuccesses =
+              delta > 0
+                ? successes + delta
+                : Math.min(successes, nextAttempts)
+            onChange({ successes: nextSuccesses, attempts: nextAttempts })
+          }}
         />
       </div>
     </div>
