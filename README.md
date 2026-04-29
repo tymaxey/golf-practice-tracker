@@ -24,7 +24,7 @@ A PROTOCOL icon will appear on your home screen. Tap it to launch the app full-s
 
 ## For developers
 
-Personal mobile-first PWA for capturing practice data across six disciplines (Putting, Chipping, Simulator, Workout, Golf, Coaching). Single user, fully local, no backend, no auth, no telemetry.
+Personal mobile-first PWA for capturing practice data across six disciplines (Putting, Chipping, Range/Simulator, Workout, Golf, Coaching). Single user, fully local, no backend, no auth, no telemetry.
 
 **Status:** v0.11 — six disciplines wired, JSON backup/restore landed, v1 ship gate met.
 
