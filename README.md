@@ -13,7 +13,7 @@ _Track drills, build skills._
 ## Install on your iPhone
 
 1. **On your iPhone, open Safari.** It must be Safari — Chrome and other browsers can't install web apps to the home screen.
-2. Go to: **`<paste your Vercel URL here>`**
+2. Go to: [protocol.golf](www.protocol.golf)
 3. Tap the **Share** button (the square with an arrow pointing up — usually at the bottom of the screen).
 4. Scroll down and tap **Add to Home Screen**.
 5. Tap **Add** in the top-right corner.
