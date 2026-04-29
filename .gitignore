@@ -11,3 +11,4 @@ dist-ssr
 .vite
 coverage
 *.tsbuildinfo
+.playwright-mcp
