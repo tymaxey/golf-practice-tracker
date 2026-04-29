@@ -1,14 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import type { ImportMode, ImportResult } from '@/db'
 import {
   csvFromSessions,
   filterSessionsInRange,
+  jsonFromSessions,
   markdownRange,
   markdownSession,
+  parseImportJson,
   shiftYMD,
   startOfMonthYMD,
   todayYMD,
 } from '@/export/format'
-import { copyText, shareOrDownloadCsv } from '@/export/share'
+import {
+  copyText,
+  shareOrDownloadCsv,
+  shareOrDownloadJson,
+} from '@/export/share'
 import { headlineSummary } from '@/session/derive'
 import type { Session } from '@/types/model'
 
@@ -16,6 +23,10 @@ type SettingsProps = {
   sessions: Session[]
   onBack: () => void
   onClearAll: () => Promise<void>
+  onImport: (
+    sessions: Session[],
+    mode: ImportMode,
+  ) => Promise<ImportResult>
   onToast: (msg: string) => void
 }
 
@@ -45,6 +56,7 @@ export function Settings({
   sessions,
   onBack,
   onClearAll,
+  onImport,
   onToast,
 }: SettingsProps) {
   const [range, setRange] = useState<RangeState>(() =>
@@ -53,6 +65,8 @@ export function Settings({
   const [picking, setPicking] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
   const [working, setWorking] = useState(false)
+  const [replaceAll, setReplaceAll] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const inRange = useMemo(
     () => filterSessionsInRange(sessions, range.start, range.end),
@@ -100,6 +114,63 @@ export function Settings({
       const ok = await copyText(markdownSession(s))
       onToast(ok ? 'Copied session' : 'Copy failed')
       if (ok) setPicking(false)
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  const handleExportJson = async () => {
+    if (working) return
+    setWorking(true)
+    try {
+      const json = jsonFromSessions(sessions)
+      const filename = `practice-backup-${todayYMD()}.json`
+      const result = await shareOrDownloadJson(filename, json)
+      if (result === 'shared') onToast('Shared backup')
+      else if (result === 'downloaded') onToast('Downloaded backup')
+      else onToast('Export failed')
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  const handleImportClick = () => {
+    if (working) return
+    if (replaceAll) {
+      const ok = window.confirm(
+        sessions.length === 0
+          ? 'Replace mode: import will overwrite all data. Continue?'
+          : `Replace mode: this will DELETE all ${sessions.length} existing sessions and replace them with the file's contents. Continue?`,
+      )
+      if (!ok) return
+    }
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChosen = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (working) return
+    setWorking(true)
+    try {
+      const text = await file.text()
+      const parsed = parseImportJson(text)
+      if (!parsed.ok) {
+        onToast(parsed.error)
+        return
+      }
+      const mode: ImportMode = replaceAll ? 'replace-all' : 'skip-duplicates'
+      const result = await onImport(parsed.sessions, mode)
+      const parts = [`Imported ${result.imported}`]
+      if (result.skipped > 0) parts.push(`skipped ${result.skipped} duplicate${result.skipped === 1 ? '' : 's'}`)
+      if (parsed.malformed > 0) parts.push(`${parsed.malformed} malformed`)
+      onToast(parts.join(' · '))
+      setReplaceAll(false)
+    } catch {
+      onToast('Import failed')
     } finally {
       setWorking(false)
     }
@@ -261,6 +332,54 @@ export function Settings({
             )}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-2xl bg-ink-900 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
+          Backup & restore
+        </h2>
+
+        <button
+          type="button"
+          onClick={handleExportJson}
+          disabled={working || sessions.length === 0}
+          className="tap w-full rounded-2xl bg-ink-800 py-4 text-sm font-semibold text-ink-100 active:bg-ink-700 disabled:opacity-40"
+        >
+          Export JSON ({sessions.length} session{sessions.length === 1 ? '' : 's'})
+        </button>
+
+        <label className="flex items-start gap-3 text-xs text-ink-300">
+          <input
+            type="checkbox"
+            checked={replaceAll}
+            onChange={(e) => setReplaceAll(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-accent-500"
+          />
+          <span>
+            Replace all data on import (deletes existing sessions first).
+          </span>
+        </label>
+
+        <button
+          type="button"
+          onClick={handleImportClick}
+          disabled={working}
+          className={`tap w-full rounded-2xl py-4 text-sm font-semibold active:opacity-80 disabled:opacity-40 ${
+            replaceAll
+              ? 'bg-red-500 text-ink-950'
+              : 'bg-ink-800 text-ink-100 active:bg-ink-700'
+          }`}
+        >
+          {replaceAll ? 'Import JSON (replace all)' : 'Import JSON'}
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={handleFileChosen}
+          className="hidden"
+        />
       </section>
 
       <section className="flex flex-col gap-3 rounded-2xl bg-ink-900 p-5">

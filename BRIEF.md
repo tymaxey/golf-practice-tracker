@@ -2,7 +2,7 @@
 
 **Owner:** Ty
 **Status:** M5 landed; six disciplines wired (Putting/Chipping/Simulator/Workout/Golf/Coaching); v1 ship gate met
-**Version:** v0.10 (2026-04-28)
+**Version:** v0.11 (2026-04-29)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -391,6 +391,7 @@ Each milestone is independently demoable.
 | 2026-04-28 | Workout and Golf sessions are uneditable: tapping their card in Recent is a no-op. `openEdit` early-returns for both `disciplineId`s | No structured drill flow to re-enter; allowing edit would require a second custom form path. Defer until edit demand actually surfaces |
 | 2026-04-28 | Coaching discipline added: GOLFTEC lesson notes container with custom form (lesson title / coach / location / prep notes / flight patterns / resolution / actions / drills assigned / summary). Single record progressively filled across pre- and post-lesson moments. Drills assigned stored as `N` rows of `metric: 'drill_assigned'` with `text`. Excluded from heatmap (lessons aren't practice); counts toward today badge. **Editable from Recent** (unique among free-form disciplines) so post-lesson sections can be filled in after the lesson. Pre-session form shows last lesson's summary + actions + drills at the top for review | Lesson notes need persistence between coaching sessions and a tight loop with practice; the prep-review card collapses the "find last session in another app" step. Edit support is required because the use case is by definition multi-touch (prep → save → return after lesson → fill post-fields). Multiple drill rows over a single newline-joined string preserves structure for future surfacing in practice flows |
 | 2026-04-28 | Coaching button on Home opens a list screen (green "Add session +" CTA + cards for past sessions) rather than jumping straight into the new-session form. Tapping a card opens a read-only `CoachingView`. Save returns to the list. Recent on Home still routes to edit | The list is the natural archive UX — past lessons are reference material, not data to re-enter. Keeping Recent → edit preserves the post-lesson fill-in path; the list adds a discoverable browse path without breaking it |
+| 2026-04-29 | JSON export + import added in Settings ("Backup & restore" section). Schema-tagged wrapper `{ schema: "practice-tracker.v1", exportedAt, sessions }`. Import default = skip duplicates by `id`; opt-in `Replace all data` checkbox flips the Import button red and gates behind a `window.confirm`. Per-record validation rejects malformed sessions; toast reports `Imported N · skipped M duplicates · K malformed`. `Attachment.blob` deliberately not serialized (always empty in v1) | Markdown/CSV are coaching-share formats and are lossy (per existing open items: CSV drops `DrillResult.text`); a real backup/restore needs full-fidelity roundtrip. JSON is whole-DB so it sits outside the range-scoped Export section. Skip-duplicates is the safe default for "restore after partial loss"; replace-all covers the "fresh device" case explicitly |
 
 ## 13. Open items
 

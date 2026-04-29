@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Toast } from '@/components/Toast'
 import { PLANS, getPlan } from '@/config/plans'
-import { clearAll, createSession, getSession, listSessions, updateSession } from '@/db'
+import {
+  clearAll,
+  createSession,
+  getSession,
+  importSessions,
+  listSessions,
+  updateSession,
+  type ImportMode,
+} from '@/db'
 import { markdownSession } from '@/export/format'
 import { copyText } from '@/export/share'
 import {
@@ -270,6 +278,15 @@ export default function App() {
     setSessions([])
   }
 
+  const handleImport = async (
+    incoming: Session[],
+    mode: ImportMode,
+  ) => {
+    const result = await importSessions(incoming, mode)
+    setSessions(await listSessions())
+    return result
+  }
+
   const handleSave = async () => {
     if (!draft || saving || screen.kind !== 'flow') return
     const plan = getPlan(screen.planId)
@@ -340,6 +357,7 @@ export default function App() {
           sessions={sessions}
           onBack={goHome}
           onClearAll={handleClearAll}
+          onImport={handleImport}
           onToast={(m) => setToast(m)}
         />
       )}

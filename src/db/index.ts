@@ -55,3 +55,29 @@ export async function deleteSession(id: string): Promise<void> {
 export async function clearAll(): Promise<void> {
   await db.sessions.clear()
 }
+
+export type ImportMode = 'skip-duplicates' | 'replace-all'
+
+export type ImportResult = {
+  imported: number
+  skipped: number
+}
+
+export async function importSessions(
+  incoming: Session[],
+  mode: ImportMode,
+): Promise<ImportResult> {
+  if (mode === 'replace-all') {
+    await db.sessions.clear()
+    await db.sessions.bulkAdd(incoming)
+    return { imported: incoming.length, skipped: 0 }
+  }
+
+  const existingIds = new Set(await db.sessions.toCollection().primaryKeys())
+  const fresh = incoming.filter((s) => !existingIds.has(s.id))
+  if (fresh.length > 0) await db.sessions.bulkAdd(fresh)
+  return {
+    imported: fresh.length,
+    skipped: incoming.length - fresh.length,
+  }
+}

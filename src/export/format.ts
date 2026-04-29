@@ -220,3 +220,88 @@ export function startOfMonthYMD(): string {
   const d = new Date()
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-01`
 }
+
+export const JSON_SCHEMA_TAG = 'practice-tracker.v1'
+
+export function jsonFromSessions(sessions: Session[]): string {
+  return JSON.stringify(
+    {
+      schema: JSON_SCHEMA_TAG,
+      exportedAt: new Date().toISOString(),
+      sessions,
+    },
+    null,
+    2,
+  )
+}
+
+export type ParseImportResult =
+  | { ok: true; sessions: Session[]; malformed: number }
+  | { ok: false; error: string }
+
+function isStringField(v: unknown): v is string {
+  return typeof v === 'string'
+}
+
+function validDrillResult(r: unknown): r is DrillResult {
+  if (!r || typeof r !== 'object') return false
+  const o = r as Record<string, unknown>
+  if (!isStringField(o.drillDefId)) return false
+  if (!isStringField(o.metric)) return false
+  if (!isStringField(o.label)) return false
+  if (typeof o.value !== 'number' || !Number.isFinite(o.value)) return false
+  if (o.text !== undefined && typeof o.text !== 'string') return false
+  if (o.denominator !== undefined && typeof o.denominator !== 'number') {
+    return false
+  }
+  if (o.unit !== undefined && typeof o.unit !== 'string') return false
+  return true
+}
+
+function validSession(s: unknown): s is Session {
+  if (!s || typeof s !== 'object') return false
+  const o = s as Record<string, unknown>
+  if (!isStringField(o.id)) return false
+  if (!isStringField(o.startedAt)) return false
+  if (o.endedAt !== null && !isStringField(o.endedAt)) return false
+  if (!isStringField(o.disciplineId)) return false
+  if (!isStringField(o.planId)) return false
+  if (!isStringField(o.phaseId)) return false
+  if (!isStringField(o.notes)) return false
+  if (!Array.isArray(o.drills)) return false
+  if (!o.drills.every(validDrillResult)) return false
+  return true
+}
+
+export function parseImportJson(text: string): ParseImportResult {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return { ok: false, error: 'File is not valid JSON.' }
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    return { ok: false, error: 'Unexpected file shape.' }
+  }
+  const obj = parsed as Record<string, unknown>
+  if (obj.schema !== JSON_SCHEMA_TAG) {
+    return {
+      ok: false,
+      error: `Unknown schema (expected ${JSON_SCHEMA_TAG}).`,
+    }
+  }
+  if (!Array.isArray(obj.sessions)) {
+    return { ok: false, error: 'Missing sessions array.' }
+  }
+
+  const valid: Session[] = []
+  let malformed = 0
+  for (const raw of obj.sessions) {
+    if (validSession(raw)) {
+      valid.push({ ...raw, attachments: [] })
+    } else {
+      malformed += 1
+    }
+  }
+  return { ok: true, sessions: valid, malformed }
+}
