@@ -35,12 +35,15 @@ export function MetricInput({ metric, value, onChange }: Props) {
         />
       )
     }
+    const isNumeric = metric.inputType === 'numeric'
     return (
       <Counter
         label={metric.label}
         value={cur}
         min={metric.min}
         max={metric.max}
+        step={isNumeric ? 0.1 : 1}
+        decimals={isNumeric ? 1 : 0}
         onChange={(n) => onChange({ kind: 'number', value: n })}
       />
     )

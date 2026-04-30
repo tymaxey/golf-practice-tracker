@@ -3,7 +3,7 @@ import type { Discipline } from '@/types/model'
 export const DISCIPLINES: Discipline[] = [
   { id: 'putting', name: 'Putting', icon: 'putting' },
   { id: 'chipping', name: 'Chipping', icon: 'chipping' },
-  { id: 'simulator', name: 'Simulator', icon: 'simulator' },
+  { id: 'simulator', name: 'Range/Sim', icon: 'simulator' },
   { id: 'range', name: 'Range', icon: 'range' },
   { id: 'workout', name: 'Workout', icon: 'workout' },
   { id: 'golf', name: 'Golf', icon: 'golf' },
