@@ -12,3 +12,4 @@ dist-ssr
 coverage
 *.tsbuildinfo
 .playwright-mcp
+.claude/worktrees
