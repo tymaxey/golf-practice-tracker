@@ -54,6 +54,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  'Place two alignment sticks 12" in front of the ball, ball-width apart. 10 putts at 3 ft. Count how many roll cleanly through the gate and into the hole.',
               },
               // Heads-up putting at 5 ft — eyes on the hole during the stroke.
               // Sasho MacKenzie's research shows better speed control and
@@ -65,6 +67,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  '10 putts at 5 ft with your eyes on the hole during the stroke (not the ball). Trains feel and tempo — Sasho MacKenzie\'s research shows better make rates this way. Count makes.',
               },
               // Phase 1 benchmark metric. Tracked weekly; week-6 target >55%.
               // KEEP THIS KEY — fivesRate extractor in derive.ts reads it.
@@ -73,6 +77,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 label: '5 ft makes / attempts',
                 inputType: 'success_total',
                 min: 0,
+                instructions:
+                  'Phase 1 benchmark metric. Putt straight 5 ft putts and log makes / attempts. Target: >55% by week 6. Volume is up to you — accuracy matters more than count.',
               },
             ],
           },
@@ -91,6 +97,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  '10 putts at 9 ft. Count finishes inside the Wellputt mat\'s "good zone" just past the hole. Trains the "die it 6–12 inches past" speed that\'s optimal for lag putting.',
               },
               // Random ladder — 10 putts randomized across 3/5/7/9 ft, count
               // those finishing within 6 inches of target. Variable practice
@@ -102,6 +110,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  '10 putts randomized across 3, 5, 7, and 9 ft — mix the order so you can\'t groove a stroke. Count those finishing within 6 inches of target. Variable practice for distance calibration.',
               },
             ],
           },
@@ -120,6 +130,8 @@ export const PUTTING_INDOOR_P1: Plan = {
                 key: 'pressure_taps',
                 label: 'Pressure putts — good / near / bad',
                 inputType: 'tap_buttons',
+                instructions:
+                  'Random distance, full pre-putt routine, single attempt — no resets. Tap good (+1) for a make or close miss, near (0) for a reasonable miss, bad (−1) for a poor result. Repeat until your time is up.',
               },
             ],
           },

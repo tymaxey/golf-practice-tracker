@@ -47,6 +47,8 @@ export const PUTTING_OUTDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  'Find a straight uphill 3 ft putt. Place two alignment sticks 12" in front of the ball, ball-width apart. 10 putts, count makes through the gate. Score-90 target: 9/10.',
               },
               // 1-Putt Circle at 3 ft — 5 markers as a pentagon at 3 ft from
               // the hole. One ball, two laps = 10 attempts. Variable reads
@@ -58,6 +60,8 @@ export const PUTTING_OUTDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  'Place 5 tees as a pentagon at 3 ft from the hole. One ball, walk around the circle twice = 10 attempts at varied reads. No restarts — play out all 10. Score-90 target: 9/10.',
               },
               // 1-Putt Circle at 4 ft — same setup, stretch distance.
               // 10 attempts. Tracks short-putt make rate where the
@@ -69,6 +73,8 @@ export const PUTTING_OUTDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  'Same pentagon setup as the 3-ft circle, stretched to 4 ft. 10 attempts, no restarts. This is where the make-rate gap between handicaps widens most. Score-90 target: 7/10.',
               },
             ],
           },
@@ -89,6 +95,8 @@ export const PUTTING_OUTDOOR_P1: Plan = {
                 inputType: 'counter',
                 min: 0,
                 max: 10,
+                instructions:
+                  '10 lag putts from varied distances (20–50 ft, no two from the same spot). Count those finishing within 3 ft of the hole — makable 2-putt range. Score-90 target: 7/10.',
               },
             ],
           },
@@ -109,9 +117,11 @@ export const PUTTING_OUTDOOR_P1: Plan = {
               {
                 key: 'green_9hole_strokes',
                 label: '9-Hole Game — total strokes',
-                inputType: 'numeric',
-                min: 18,
+                inputType: 'counter',
+                min: 0,
                 max: 50,
+                instructions:
+                  'Pick 9 different holes on the green — 3 short, 3 medium, 3 long. One ball, putt each one out, log total strokes. Real-game simulation under fatigue. Score-90 target: 26.',
               },
             ],
           },

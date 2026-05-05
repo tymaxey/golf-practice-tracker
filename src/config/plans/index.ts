@@ -3,6 +3,7 @@ import { PUTTING_PHASE_1 } from './putting-phase-1'
 import { PUTTING_INDOOR_P1 } from './putting-indoor-p1'
 import { PUTTING_OUTDOOR_P1 } from './putting-outdoor-p1'
 import { CHIPPING_PHASE_1 } from './chipping-break-80-p1'
+import { CHIPPING_OUTDOOR_P1 } from './chipping-outdoor-p1'
 import { SIMULATOR_PHASE_1 } from './simulator-break-80-p1'
 import { WORKOUT_PLAN } from './workout'
 import { GOLF_PLAN } from './golf'
@@ -17,6 +18,7 @@ export const PLANS: Plan[] = [
   PUTTING_OUTDOOR_P1,
   SIMULATOR_PHASE_1,
   CHIPPING_PHASE_1,
+  CHIPPING_OUTDOOR_P1,
   GOLF_PLAN,
   COACHING_PLAN,
 ]

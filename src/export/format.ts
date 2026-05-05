@@ -1,5 +1,10 @@
+import { getDiscipline } from '@/config/disciplines'
 import {
   alleyRate,
+  chip6iRate,
+  chip8iRate,
+  chip9HoleStrokes,
+  chipPwRate,
   exportHeadline,
   fivesRate,
   formatDuration,
@@ -13,6 +18,8 @@ import {
   greenLagRate,
   headsUpRate,
   ladderRate,
+  pitchContactRate,
+  pitchProximityRate,
   pressureDistribution,
   pressureScore,
 } from '@/session/derive'
@@ -41,7 +48,8 @@ function findDrill(s: Session, metric: string): DrillResult | undefined {
 
 export function markdownSession(s: Session): string {
   const lines: string[] = []
-  lines.push('## Putting Session Log')
+  const discName = getDiscipline(s.disciplineId)?.name ?? 'Practice'
+  lines.push(`## ${discName} Session Log`)
   lines.push('')
   lines.push(`**Date:** ${localYMD(s.startedAt)}`)
   lines.push(`**Duration:** ${formatDuration(s.startedAt, s.endedAt)}`)
@@ -49,24 +57,7 @@ export function markdownSession(s: Session): string {
   if (headline) lines.push(`**Headline:** ${headline}`)
   if (s.notes.trim()) lines.push(`**Notes:** ${s.notes.trim()}`)
 
-  const sections =
-    s.planId === 'putting-outdoor-p1'
-      ? [
-          ['Face Control Block', renderFaceControlGreen(s)],
-          ['Distance Control Block', renderDistanceControlGreen(s)],
-          ['9-Hole Game', renderPressureGameGreen(s)],
-        ] as const
-      : s.planId === 'putting-indoor-p1'
-        ? [
-            ['Face Control Block', renderFaceControlMat(s)],
-            ['Distance Control Block', renderDistanceControlMat(s)],
-            ['Pressure/Random Block', renderPressureBlock(s)],
-          ] as const
-        : [
-            ['Face Control Block', renderFaceControlLegacy(s)],
-            ['Distance Control Block', renderDistanceControlLegacy(s)],
-            ['Pressure/Random Block', renderPressureBlock(s)],
-          ] as const
+  const sections = sectionsFor(s)
 
   for (const [heading, body] of sections) {
     if (body.length) {
@@ -77,6 +68,35 @@ export function markdownSession(s: Session): string {
   }
 
   return lines.join('\n')
+}
+
+function sectionsFor(s: Session): readonly (readonly [string, string[]])[] {
+  switch (s.planId) {
+    case 'putting-outdoor-p1':
+      return [
+        ['Face Control Block', renderFaceControlGreen(s)],
+        ['Distance Control Block', renderDistanceControlGreen(s)],
+        ['9-Hole Game', renderPressureGameGreen(s)],
+      ] as const
+    case 'putting-indoor-p1':
+      return [
+        ['Face Control Block', renderFaceControlMat(s)],
+        ['Distance Control Block', renderDistanceControlMat(s)],
+        ['Pressure/Random Block', renderPressureBlock(s)],
+      ] as const
+    case 'chipping-outdoor-p1':
+      return [
+        ['Multi-Club Chip Block', renderMultiClubChipBlock(s)],
+        ['Pitch Shot Block', renderPitchShotBlock(s)],
+        ['9-Hole Chipping Game', renderNineHoleChipBlock(s)],
+      ] as const
+    default:
+      return [
+        ['Face Control Block', renderFaceControlLegacy(s)],
+        ['Distance Control Block', renderDistanceControlLegacy(s)],
+        ['Pressure/Random Block', renderPressureBlock(s)],
+      ] as const
+  }
 }
 
 function renderFaceControlMat(s: Session): string[] {
@@ -129,6 +149,33 @@ function renderPressureGameGreen(s: Session): string[] {
   const out: string[] = []
   const strokes = green9HoleStrokes(s)
   if (strokes !== null) out.push(`- 9-Hole Game: ${strokes} total strokes`)
+  return out
+}
+
+function renderMultiClubChipBlock(s: Session): string[] {
+  const out: string[] = []
+  const pw = chipPwRate(s)
+  if (pw) out.push(`- PW chips (5): ${pw.value} / 5 within 6 ft (${formatPct(pw)})`)
+  const i8 = chip8iRate(s)
+  if (i8) out.push(`- 8i chips (5): ${i8.value} / 5 within 6 ft (${formatPct(i8)})`)
+  const i6 = chip6iRate(s)
+  if (i6) out.push(`- 6i chips (5): ${i6.value} / 5 within 6 ft (${formatPct(i6)})`)
+  return out
+}
+
+function renderPitchShotBlock(s: Session): string[] {
+  const out: string[] = []
+  const prox = pitchProximityRate(s)
+  if (prox) out.push(`- Pitches (10): ${prox.value} / 10 within 6 ft (${formatPct(prox)})`)
+  const contact = pitchContactRate(s)
+  if (contact) out.push(`- Pitches (10): ${contact.value} / 10 solid contact (${formatPct(contact)})`)
+  return out
+}
+
+function renderNineHoleChipBlock(s: Session): string[] {
+  const out: string[] = []
+  const strokes = chip9HoleStrokes(s)
+  if (strokes !== null) out.push(`- 9-Hole Chipping Game: ${strokes} total strokes`)
   return out
 }
 

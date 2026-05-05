@@ -1,6 +1,7 @@
 import type { Draft, MetricValue } from '@/session/draft'
 import type { DrillDef } from '@/types/model'
 import { MetricInput } from './MetricInput'
+import { MetricLabel } from './MetricLabel'
 
 type ReviewProps = {
   drills: DrillDef[]
@@ -55,7 +56,7 @@ export function Review({
           </h2>
           {drill.metrics.map((m) => (
             <div key={m.key} className="flex flex-col gap-2">
-              <div className="text-sm text-ink-200">{m.label}</div>
+              <MetricLabel label={m.label} instructions={m.instructions} />
               <MetricInput
                 metric={m}
                 value={draft.values[m.key]}

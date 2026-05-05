@@ -23,22 +23,43 @@ export function ladderRate(s: Session): Rate | null {
   return null
 }
 
-const counterRateOver10 = (s: Session, key: string): Rate | null => {
+const counterRate = (s: Session, key: string, denominator: number): Rate | null => {
   const r = findResult(s, key)
-  return r ? { value: r.value, denominator: 10 } : null
+  return r ? { value: r.value, denominator } : null
 }
 
-export const alleyRate = (s: Session) => counterRateOver10(s, 'alley_3ft_makes')
-export const headsUpRate = (s: Session) => counterRateOver10(s, 'heads_up_5ft_makes')
-export const goodZoneRate = (s: Session) => counterRateOver10(s, 'good_zone_9ft')
+export const alleyRate = (s: Session) => counterRate(s, 'alley_3ft_makes', 10)
+export const headsUpRate = (s: Session) => counterRate(s, 'heads_up_5ft_makes', 10)
+export const goodZoneRate = (s: Session) => counterRate(s, 'good_zone_9ft', 10)
 
-export const greenAlleyRate = (s: Session) => counterRateOver10(s, 'green_alley_3ft')
-export const greenCircle3ftRate = (s: Session) => counterRateOver10(s, 'green_circle_3ft')
-export const greenCircle4ftRate = (s: Session) => counterRateOver10(s, 'green_circle_4ft')
-export const greenLagRate = (s: Session) => counterRateOver10(s, 'green_lag_circle')
+export const greenAlleyRate = (s: Session) => counterRate(s, 'green_alley_3ft', 10)
+export const greenCircle3ftRate = (s: Session) => counterRate(s, 'green_circle_3ft', 10)
+export const greenCircle4ftRate = (s: Session) => counterRate(s, 'green_circle_4ft', 10)
+export const greenLagRate = (s: Session) => counterRate(s, 'green_lag_circle', 10)
 
 export function green9HoleStrokes(s: Session): number | null {
   const r = findResult(s, 'green_9hole_strokes')
+  return r ? r.value : null
+}
+
+export const chipPwRate = (s: Session) => counterRate(s, 'chip_pw_within_6ft', 5)
+export const chip8iRate = (s: Session) => counterRate(s, 'chip_8i_within_6ft', 5)
+export const chip6iRate = (s: Session) => counterRate(s, 'chip_6i_within_6ft', 5)
+
+export function chipMultiClubRate(s: Session): Rate | null {
+  const pw = findResult(s, 'chip_pw_within_6ft')
+  const i8 = findResult(s, 'chip_8i_within_6ft')
+  const i6 = findResult(s, 'chip_6i_within_6ft')
+  if (!pw && !i8 && !i6) return null
+  const value = (pw?.value ?? 0) + (i8?.value ?? 0) + (i6?.value ?? 0)
+  return { value, denominator: 15 }
+}
+
+export const pitchProximityRate = (s: Session) => counterRate(s, 'pitch_within_6ft', 10)
+export const pitchContactRate = (s: Session) => counterRate(s, 'pitch_solid_contact', 10)
+
+export function chip9HoleStrokes(s: Session): number | null {
+  const r = findResult(s, 'chip_9hole_strokes')
   return r ? r.value : null
 }
 
@@ -85,6 +106,7 @@ export function formatDuration(startedAt: string, endedAt: string | null): strin
 
 export function exportHeadline(session: Session): string {
   if (session.planId === 'putting-outdoor-p1') return outdoorHeadlineParts(session, formatPct).join(' · ')
+  if (session.planId === 'chipping-outdoor-p1') return chippingHeadlineParts(session, formatPct).join(' · ')
   const parts: string[] = []
   const fives = fivesRate(session)
   if (fives) parts.push(`5-ft ${formatPct(fives)}`)
@@ -100,6 +122,11 @@ export function headlineSummary(session: Session): string {
   if (session.disciplineId === 'coaching') return coachingSummary(session)
   if (session.planId === 'putting-outdoor-p1') {
     const parts = outdoorHeadlineParts(session, (r) => `${r.value}/${r.denominator}`)
+    if (parts.length === 0) return session.drills.length === 0 ? session.notes || 'Logged' : `${session.drills.length} metrics`
+    return parts.join(' · ')
+  }
+  if (session.planId === 'chipping-outdoor-p1') {
+    const parts = chippingHeadlineParts(session, (r) => `${r.value}/${r.denominator}`)
     if (parts.length === 0) return session.drills.length === 0 ? session.notes || 'Logged' : `${session.drills.length} metrics`
     return parts.join(' · ')
   }
@@ -128,6 +155,17 @@ function outdoorHeadlineParts(session: Session, fmt: (r: Rate) => string): strin
   if (lag) parts.push(`Lag ${fmt(lag)}`)
   const strokes = green9HoleStrokes(session)
   if (strokes !== null) parts.push(`9-hole ${strokes}`)
+  return parts
+}
+
+function chippingHeadlineParts(session: Session, fmt: (r: Rate) => string): string[] {
+  const parts: string[] = []
+  const strokes = chip9HoleStrokes(session)
+  if (strokes !== null) parts.push(`9-hole ${strokes}`)
+  const multi = chipMultiClubRate(session)
+  if (multi) parts.push(`Multi-club ${fmt(multi)}`)
+  const pitch = pitchProximityRate(session)
+  if (pitch) parts.push(`Pitch ${fmt(pitch)}`)
   return parts
 }
 

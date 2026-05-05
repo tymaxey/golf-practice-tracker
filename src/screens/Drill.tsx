@@ -1,6 +1,7 @@
 import type { MetricValue } from '@/session/draft'
-import type { DrillDef } from '@/types/model'
+import type { DrillDef, MetricDef } from '@/types/model'
 import { MetricInput } from './MetricInput'
+import { MetricLabel } from './MetricLabel'
 
 type DrillProps = {
   drill: DrillDef
@@ -44,7 +45,7 @@ export function Drill({
 
       <section className="flex flex-col gap-5 rounded-2xl bg-ink-900 p-5">
         {drill.metrics.map((m) => (
-          <Field key={m.key} label={m.label}>
+          <Field key={m.key} metric={m}>
             <MetricInput
               metric={m}
               value={values[m.key]}
@@ -66,15 +67,15 @@ export function Drill({
 }
 
 function Field({
-  label,
+  metric,
   children,
 }: {
-  label: string
+  metric: MetricDef
   children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm text-ink-200">{label}</div>
+      <MetricLabel label={metric.label} instructions={metric.instructions} />
       {children}
     </div>
   )

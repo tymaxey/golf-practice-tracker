@@ -23,7 +23,7 @@ export const CHIPPING_PHASE_1: Plan = {
   id: 'chipping-break-80-p1',
   disciplineId: 'chipping',
   name: 'Break 80 — Chipping Phase 1',
-  isActive: true,
+  isActive: false,
   phases: [
     {
       id: 'chipping-break-80-p1-phase-1',

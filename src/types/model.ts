@@ -50,6 +50,7 @@ export type MetricDef = {
   inputType: DrillInputType
   min?: number
   max?: number
+  instructions?: string
 }
 
 export type Session = {

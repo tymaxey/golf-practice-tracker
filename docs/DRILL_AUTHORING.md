@@ -67,6 +67,7 @@ type MetricDef = {
   inputType: 'counter' | 'success_total' | 'tap_buttons' | 'numeric'
   min?: number
   max?: number
+  instructions?: string
 }
 ```
 
@@ -93,6 +94,28 @@ type MetricDef = {
   disciplines. The session draft is a flat `Record<string, MetricValue>`;
   same key in two drills = silent overwrite.
 
+## Instructions
+
+Every metric should have an `instructions` string. It surfaces in the drill
+entry UI as an inline reveal panel below the label, toggled by an (i) icon.
+
+- **Required for every metric.** A metric without instructions silently hides
+  the (i) icon — leaves the user without setup guidance.
+- **Length: 100–300 characters.** Long enough to specify setup and what
+  counts; short enough to scan in one breath.
+- **Tone: terse, imperative.** "Place two alignment sticks 12" in front…",
+  not "You should consider placing…". Tell the user what to do, not why.
+- **Single paragraph only.** No `\n`, no markdown, no lists. The reveal panel
+  renders one block of plain text.
+- **Order: setup → execution → what to count.** That's the natural reading
+  order for a drill: where do I stand, what do I do, what do I log.
+- **Targets/benchmarks are OK to include** if they aid execution (e.g.
+  "Score-90 target: 9/10"). Don't lecture about why the target matters.
+
+Example: `'Place two alignment sticks 12" in front of the ball, ball-width
+apart. 10 putts at 3 ft. Count how many roll cleanly through the gate and
+into the hole.'`
+
 ## Naming conventions
 
 - `plan.id`, `phase.id`, `drill.id`: lowercase-kebab (`putting-break-80-p1`,
@@ -109,6 +132,8 @@ type MetricDef = {
 A new metric appears automatically in:
 
 - The drill entry screen (renders via `MetricInput.tsx` based on `inputType`)
+- The drill entry screen's (i) instructions toggle (renders via
+  `MetricLabel.tsx` whenever `instructions` is set — no wiring needed)
 - The CSV export (one row per `DrillResult`, uses `metric.label` as-is)
 
 A new metric does **NOT** appear automatically in:
@@ -165,6 +190,7 @@ export const <<<CONST_NAME_UPPER_SNAKE>>>: Plan = {
                 inputType: '<<<counter | success_total | tap_buttons | numeric>>>',
                 min: <<<int_or_omit>>>,
                 max: <<<int_or_omit_recommended_for_grid_<=12_range>>>,
+                instructions: '<<<one paragraph, 100–300 chars, setup → execution → what to count>>>',
               },
               // ...more metrics
             ],
@@ -211,13 +237,16 @@ export const PUTTING_PHASE_1: Plan = {
           metrics: [
             // bounded counter -> NumberPad grid (10-1+1=10 ≤ 12)
             { key: 'gate_5ft_clean', label: 'Gate drill (5 ft) — clean throughs',
-              inputType: 'counter', min: 0, max: 10 },
+              inputType: 'counter', min: 0, max: 10,
+              instructions: 'Set a tee gate just wider than the ball, 12" in front of the ball at 5 ft. 10 putts. Count how many roll cleanly through the gate.' },
             // unbounded counter -> +/- stepper
             { key: 'consec_3ft_streak', label: 'Consecutive 3-ft makes — longest streak',
-              inputType: 'counter', min: 0 },
+              inputType: 'counter', min: 0,
+              instructions: 'Putt 3 ft straight putts. Track your longest streak of consecutive makes — a miss resets the count.' },
             // dual stepper, derives a percentage
             { key: 'makes_5ft', label: '5-ft makes / attempts',
-              inputType: 'success_total', min: 0 },
+              inputType: 'success_total', min: 0,
+              instructions: 'Phase 1 benchmark. Putt straight 5 ft putts and log makes / attempts. Target: >55% by week 6.' },
           ],
         },
         // distance-control: ladder_within_6 + random_within_6 (both success_total)
@@ -233,6 +262,8 @@ export const PUTTING_PHASE_1: Plan = {
 - [ ] New file in `src/config/plans/` with the right `disciplineId`
 - [ ] Registered in `src/config/plans/index.ts` PLANS array
 - [ ] All metric keys are globally unique (grep `src/config/plans/`)
+- [ ] Every metric has an `instructions` string (100–300 chars, single
+      paragraph, setup → execution → what to count)
 - [ ] No `tap_buttons` collision (only one allowed in the app today)
 - [ ] If a metric should drive trends or the headline summary: add an
       extractor in `src/session/derive.ts` and reference it in
