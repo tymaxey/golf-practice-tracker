@@ -1,14 +1,20 @@
 import type { Plan, Phase, DrillDef } from '@/types/model'
 import { PUTTING_PHASE_1 } from './putting-phase-1'
+import { PUTTING_INDOOR_P1 } from './putting-indoor-p1'
+import { PUTTING_OUTDOOR_P1 } from './putting-outdoor-p1'
 import { CHIPPING_PHASE_1 } from './chipping-break-80-p1'
 import { SIMULATOR_PHASE_1 } from './simulator-break-80-p1'
 import { WORKOUT_PLAN } from './workout'
 import { GOLF_PLAN } from './golf'
 import { COACHING_PLAN } from './coaching'
 
+// PUTTING_PHASE_1 is kept inactive so legacy sessions still resolve drills via getPlan().
+// Only one plan per discipline can be isActive — toggle indoor/outdoor when at the green.
 export const PLANS: Plan[] = [
   WORKOUT_PLAN,
   PUTTING_PHASE_1,
+  PUTTING_INDOOR_P1,
+  PUTTING_OUTDOOR_P1,
   SIMULATOR_PHASE_1,
   CHIPPING_PHASE_1,
   GOLF_PLAN,

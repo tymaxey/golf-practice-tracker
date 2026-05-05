@@ -1,9 +1,17 @@
 import {
+  alleyRate,
   exportHeadline,
   fivesRate,
   formatDuration,
   formatPct,
   formatPressure,
+  goodZoneRate,
+  green9HoleStrokes,
+  greenAlleyRate,
+  greenCircle3ftRate,
+  greenCircle4ftRate,
+  greenLagRate,
+  headsUpRate,
   ladderRate,
   pressureDistribution,
   pressureScore,
@@ -41,31 +49,90 @@ export function markdownSession(s: Session): string {
   if (headline) lines.push(`**Headline:** ${headline}`)
   if (s.notes.trim()) lines.push(`**Notes:** ${s.notes.trim()}`)
 
-  const face = renderFaceControl(s)
-  if (face.length) {
-    lines.push('')
-    lines.push('### Face Control Block')
-    lines.push(...face)
-  }
+  const sections =
+    s.planId === 'putting-outdoor-p1'
+      ? [
+          ['Face Control Block', renderFaceControlGreen(s)],
+          ['Distance Control Block', renderDistanceControlGreen(s)],
+          ['9-Hole Game', renderPressureGameGreen(s)],
+        ] as const
+      : s.planId === 'putting-indoor-p1'
+        ? [
+            ['Face Control Block', renderFaceControlMat(s)],
+            ['Distance Control Block', renderDistanceControlMat(s)],
+            ['Pressure/Random Block', renderPressureBlock(s)],
+          ] as const
+        : [
+            ['Face Control Block', renderFaceControlLegacy(s)],
+            ['Distance Control Block', renderDistanceControlLegacy(s)],
+            ['Pressure/Random Block', renderPressureBlock(s)],
+          ] as const
 
-  const distance = renderDistanceControl(s)
-  if (distance.length) {
-    lines.push('')
-    lines.push('### Distance Control Block')
-    lines.push(...distance)
-  }
-
-  const pressure = renderPressureBlock(s)
-  if (pressure.length) {
-    lines.push('')
-    lines.push('### Pressure/Random Block')
-    lines.push(...pressure)
+  for (const [heading, body] of sections) {
+    if (body.length) {
+      lines.push('')
+      lines.push(`### ${heading}`)
+      lines.push(...body)
+    }
   }
 
   return lines.join('\n')
 }
 
-function renderFaceControl(s: Session): string[] {
+function renderFaceControlMat(s: Session): string[] {
+  const out: string[] = []
+  const alley = alleyRate(s)
+  if (alley) out.push(`- Alley drill (3 ft): ${alley.value} / 10 makes`)
+  const heads = headsUpRate(s)
+  if (heads) out.push(`- Heads-up (5 ft): ${heads.value} / 10 makes`)
+  const fives = fivesRate(s)
+  if (fives) {
+    out.push(
+      `- 5-ft make rate: ${fives.value} / ${fives.denominator} (${formatPct(fives)})`,
+    )
+  }
+  return out
+}
+
+function renderDistanceControlMat(s: Session): string[] {
+  const out: string[] = []
+  const goodZone = goodZoneRate(s)
+  if (goodZone) out.push(`- Good Zone (9 ft): ${goodZone.value} / 10 in zone`)
+  const ladder = ladderRate(s)
+  if (ladder) {
+    out.push(
+      `- Random ladder (3/5/7/9 ft): ${ladder.value} / ${ladder.denominator} within 6 inches (${formatPct(ladder)})`,
+    )
+  }
+  return out
+}
+
+function renderFaceControlGreen(s: Session): string[] {
+  const out: string[] = []
+  const alley = greenAlleyRate(s)
+  if (alley) out.push(`- Down the Alley (3 ft): ${alley.value} / 10 makes`)
+  const c3 = greenCircle3ftRate(s)
+  if (c3) out.push(`- 1-Putt Circle (3 ft): ${c3.value} / 10 makes`)
+  const c4 = greenCircle4ftRate(s)
+  if (c4) out.push(`- 1-Putt Circle (4 ft): ${c4.value} / 10 makes`)
+  return out
+}
+
+function renderDistanceControlGreen(s: Session): string[] {
+  const out: string[] = []
+  const lag = greenLagRate(s)
+  if (lag) out.push(`- Lag into 3-ft Circle: ${lag.value} / 10 within 3 ft`)
+  return out
+}
+
+function renderPressureGameGreen(s: Session): string[] {
+  const out: string[] = []
+  const strokes = green9HoleStrokes(s)
+  if (strokes !== null) out.push(`- 9-Hole Game: ${strokes} total strokes`)
+  return out
+}
+
+function renderFaceControlLegacy(s: Session): string[] {
   const out: string[] = []
   const gate = findDrill(s, 'gate_5ft_clean')
   if (gate) out.push(`- Gate drill (5 ft): ${gate.value} / 10 clean throughs`)
@@ -80,7 +147,7 @@ function renderFaceControl(s: Session): string[] {
   return out
 }
 
-function renderDistanceControl(s: Session): string[] {
+function renderDistanceControlLegacy(s: Session): string[] {
   const out: string[] = []
   const ladder = ladderRate(s)
   if (ladder) {

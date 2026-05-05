@@ -12,9 +12,34 @@ export function fivesRate(s: Session): Rate | null {
 }
 
 export function ladderRate(s: Session): Rate | null {
-  const r = findResult(s, 'ladder_within_6')
-  if (!r || r.denominator === undefined || r.denominator <= 0) return null
-  return { value: r.value, denominator: r.denominator }
+  // Indoor plan: random_ladder_within_6 is a 0–10 counter (no stored denominator).
+  const newR = findResult(s, 'random_ladder_within_6')
+  if (newR) return { value: newR.value, denominator: 10 }
+  // Legacy plan: success_total with explicit denominator.
+  const legacy = findResult(s, 'ladder_within_6')
+  if (legacy && legacy.denominator !== undefined && legacy.denominator > 0) {
+    return { value: legacy.value, denominator: legacy.denominator }
+  }
+  return null
+}
+
+const counterRateOver10 = (s: Session, key: string): Rate | null => {
+  const r = findResult(s, key)
+  return r ? { value: r.value, denominator: 10 } : null
+}
+
+export const alleyRate = (s: Session) => counterRateOver10(s, 'alley_3ft_makes')
+export const headsUpRate = (s: Session) => counterRateOver10(s, 'heads_up_5ft_makes')
+export const goodZoneRate = (s: Session) => counterRateOver10(s, 'good_zone_9ft')
+
+export const greenAlleyRate = (s: Session) => counterRateOver10(s, 'green_alley_3ft')
+export const greenCircle3ftRate = (s: Session) => counterRateOver10(s, 'green_circle_3ft')
+export const greenCircle4ftRate = (s: Session) => counterRateOver10(s, 'green_circle_4ft')
+export const greenLagRate = (s: Session) => counterRateOver10(s, 'green_lag_circle')
+
+export function green9HoleStrokes(s: Session): number | null {
+  const r = findResult(s, 'green_9hole_strokes')
+  return r ? r.value : null
 }
 
 export function pressureScore(s: Session): number | null {
@@ -59,6 +84,7 @@ export function formatDuration(startedAt: string, endedAt: string | null): strin
 }
 
 export function exportHeadline(session: Session): string {
+  if (session.planId === 'putting-outdoor-p1') return outdoorHeadlineParts(session, formatPct).join(' · ')
   const parts: string[] = []
   const fives = fivesRate(session)
   if (fives) parts.push(`5-ft ${formatPct(fives)}`)
@@ -72,6 +98,11 @@ export function exportHeadline(session: Session): string {
 export function headlineSummary(session: Session): string {
   if (session.disciplineId === 'golf') return golfSummary(session)
   if (session.disciplineId === 'coaching') return coachingSummary(session)
+  if (session.planId === 'putting-outdoor-p1') {
+    const parts = outdoorHeadlineParts(session, (r) => `${r.value}/${r.denominator}`)
+    if (parts.length === 0) return session.drills.length === 0 ? session.notes || 'Logged' : `${session.drills.length} metrics`
+    return parts.join(' · ')
+  }
 
   const parts: string[] = []
   const fives = fivesRate(session)
@@ -85,6 +116,19 @@ export function headlineSummary(session: Session): string {
     return `${session.drills.length} metrics`
   }
   return parts.join(' · ')
+}
+
+function outdoorHeadlineParts(session: Session, fmt: (r: Rate) => string): string[] {
+  const parts: string[] = []
+  const c3 = greenCircle3ftRate(session)
+  if (c3) parts.push(`Circle 3ft ${fmt(c3)}`)
+  const c4 = greenCircle4ftRate(session)
+  if (c4) parts.push(`Circle 4ft ${fmt(c4)}`)
+  const lag = greenLagRate(session)
+  if (lag) parts.push(`Lag ${fmt(lag)}`)
+  const strokes = green9HoleStrokes(session)
+  if (strokes !== null) parts.push(`9-hole ${strokes}`)
+  return parts
 }
 
 function golfSummary(session: Session): string {

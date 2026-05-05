@@ -40,6 +40,7 @@ type Screen =
   | { kind: 'home' }
   | { kind: 'settings' }
   | { kind: 'workout' }
+  | { kind: 'putting-picker' }
   | { kind: 'golf-picker' }
   | { kind: 'golf-form'; drillId: 'golf-live' | 'golf-practice' }
   | { kind: 'coaching-list' }
@@ -79,6 +80,18 @@ export default function App() {
     )
   }
 
+  const startFlow = (planId: string) => {
+    const drills = drillsForPlan(planId)
+    if (drills.length === 0) return
+    setDraft(emptyDraft(drills))
+    setScreen({
+      kind: 'flow',
+      planId,
+      step: { kind: 'drill', index: 0 },
+      mode: 'new',
+    })
+  }
+
   const startNew = (planId: string) => {
     if (planId === 'workout') {
       setScreen({ kind: 'workout' })
@@ -92,15 +105,12 @@ export default function App() {
       setScreen({ kind: 'coaching-list' })
       return
     }
-    const drills = drillsForPlan(planId)
-    if (drills.length === 0) return
-    setDraft(emptyDraft(drills))
-    setScreen({
-      kind: 'flow',
-      planId,
-      step: { kind: 'drill', index: 0 },
-      mode: 'new',
-    })
+    // Putting Home tile fans out to indoor/outdoor variants.
+    if (planId === 'putting-indoor-p1' || planId === 'putting-outdoor-p1') {
+      setScreen({ kind: 'putting-picker' })
+      return
+    }
+    startFlow(planId)
   }
 
   const saveGolf = async (
@@ -370,6 +380,10 @@ export default function App() {
         />
       )}
 
+      {screen.kind === 'putting-picker' && (
+        <PuttingPicker onBack={goHome} onPick={startFlow} />
+      )}
+
       {screen.kind === 'golf-picker' && (
         <GolfPicker
           drills={drillsForPlan('golf')}
@@ -564,6 +578,45 @@ function WorkoutPicker({ drills, onBack, onPick }: WorkoutPickerProps) {
             className="tap flex w-full flex-col gap-1 rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
           >
             <span className="text-base font-semibold">{drill.name}</span>
+          </button>
+        ))}
+      </section>
+    </div>
+  )
+}
+
+type PuttingPickerProps = {
+  onBack: () => void
+  onPick: (planId: string) => void
+}
+
+function PuttingPicker({ onBack, onPick }: PuttingPickerProps) {
+  const options: { planId: string; label: string }[] = [
+    { planId: 'putting-indoor-p1', label: 'Indoor' },
+    { planId: 'putting-outdoor-p1', label: 'Outdoor' },
+  ]
+  return (
+    <div className="mx-auto flex min-h-full max-w-md flex-col gap-5 px-5 pb-24 pt-3">
+      <header className="flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="tap -ml-2 self-start px-2 text-sm text-ink-400 active:text-ink-200"
+        >
+          ← Home
+        </button>
+        <h1 className="text-xl font-semibold">Putting</h1>
+      </header>
+
+      <section className="flex flex-col gap-3">
+        {options.map((opt) => (
+          <button
+            key={opt.planId}
+            type="button"
+            onClick={() => onPick(opt.planId)}
+            className="tap flex w-full flex-col gap-1 rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
+          >
+            <span className="text-base font-semibold">{opt.label}</span>
           </button>
         ))}
       </section>

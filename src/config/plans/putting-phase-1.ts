@@ -4,7 +4,7 @@ export const PUTTING_PHASE_1: Plan = {
   id: 'putting-break-80-p1',
   disciplineId: 'putting',
   name: 'Break 80 — Putting Phase 1',
-  isActive: true,
+  isActive: false,
   phases: [
     {
       id: 'putting-break-80-p1-phase-1',
