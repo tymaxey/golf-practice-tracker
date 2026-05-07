@@ -36,12 +36,23 @@ export type DrillType =
   | 'pressure_random'
   | (string & {})
 
+export type DrillContent = {
+  targets?: string
+  why?: string
+  setup?: string
+  execution?: string
+  dose?: string
+  cues?: string
+  stopCriteria?: string
+}
+
 export type DrillDef = {
   id: string
   type: DrillType
   name: string
   durationMin: number
   metrics: MetricDef[]
+  content?: DrillContent
 }
 
 export type MetricDef = {

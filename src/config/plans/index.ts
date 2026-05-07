@@ -6,13 +6,18 @@ import { CHIPPING_PHASE_1 } from './chipping-break-80-p1'
 import { CHIPPING_OUTDOOR_P1 } from './chipping-outdoor-p1'
 import { SIMULATOR_PHASE_1 } from './simulator-break-80-p1'
 import { WORKOUT_PLAN } from './workout'
+import { MOBILITY_PLIABILITY } from './mobility-pliability'
+import { MOBILITY_KURUC } from './mobility-kuruc'
 import { GOLF_PLAN } from './golf'
 import { COACHING_PLAN } from './coaching'
 
 // PUTTING_PHASE_1 is kept inactive so legacy sessions still resolve drills via getPlan().
 // Only one plan per discipline can be isActive — toggle indoor/outdoor when at the green.
+// Mobility plans are inactive (kept off Home tiles); the MobilityPicker hardcodes the list.
 export const PLANS: Plan[] = [
   WORKOUT_PLAN,
+  MOBILITY_PLIABILITY,
+  MOBILITY_KURUC,
   PUTTING_PHASE_1,
   PUTTING_INDOOR_P1,
   PUTTING_OUTDOOR_P1,

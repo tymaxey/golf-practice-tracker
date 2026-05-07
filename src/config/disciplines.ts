@@ -6,6 +6,7 @@ export const DISCIPLINES: Discipline[] = [
   { id: 'simulator', name: 'Range/Sim', icon: 'simulator' },
   { id: 'range', name: 'Range', icon: 'range' },
   { id: 'workout', name: 'Workout', icon: 'workout' },
+  { id: 'mobility', name: 'Mobility', icon: 'mobility' },
   { id: 'golf', name: 'Golf', icon: 'golf' },
   { id: 'coaching', name: 'Coaching', icon: 'coaching' },
 ]
