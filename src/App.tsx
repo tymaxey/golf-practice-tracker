@@ -4,6 +4,7 @@ import { PLANS, getPlan } from '@/config/plans'
 import {
   clearAll,
   createSession,
+  deleteSession,
   getSession,
   importSessions,
   listSessions,
@@ -327,6 +328,12 @@ export default function App() {
     setSessions([])
   }
 
+  const handleDelete = async (id: string) => {
+    await deleteSession(id)
+    setSessions(await listSessions())
+    setToast('Deleted session')
+  }
+
   const handleImport = async (
     incoming: Session[],
     mode: ImportMode,
@@ -398,6 +405,7 @@ export default function App() {
           sessions={sessions}
           onStart={startNew}
           onOpenSession={openEdit}
+          onDeleteSession={handleDelete}
         />
       )}
 
