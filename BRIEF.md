@@ -1,8 +1,8 @@
 # Practice Tracker — Build Brief
 
 **Owner:** Ty
-**Status:** M5 landed; six disciplines wired (Putting/Chipping/Simulator/Workout/Golf/Coaching); v1 ship gate met
-**Version:** v0.11 (2026-04-29)
+**Status:** M5 landed; seven disciplines wired (Putting/Chipping/Simulator/Workout/Mobility/Golf/Coaching); v1 ship gate met
+**Version:** v0.12 (2026-05-07)
 **Repo:** https://github.com/tymaxey/golf-practice-tracker (private)
 
 ---
@@ -229,15 +229,32 @@ Phase-2 dry-run; not all R10 sessions hit this block.
 
 ## 7c. Workout (placeholder, no metrics)
 
-Quick-log surface for cross-training. Tapping the Workout button on Home opens a sub-picker with three options; tapping any option immediately creates a session and returns Home. The chosen option name is stored in `session.notes` so Recent reads "Workout · Run" etc. No drills, no metrics, no per-option tracking yet.
+Quick-log surface for cross-training. Tapping the Workout button on Home opens a sub-picker with three options. **GolfForever** and **Run** immediately create a session and return Home (notes carry the option name). **Mobility** is a navigation pivot — it routes to the Mobility picker (§7e) instead of logging.
 
 | drill id | label | input | persistence |
 |---|---|---|---|
 | workout-golfforever | GolfForever | (none) | session.notes = "GolfForever", drills = [] |
 | workout-run | Run | (none) | session.notes = "Run", drills = [] |
-| workout-mobility | Mobility | (none) | session.notes = "Mobility", drills = [] |
+| workout-mobility | Mobility | navigation | opens Mobility picker (§7e) — does NOT create a workout session |
 
 Workout sessions appear in the heatmap (cross-training is part of the habit) and are uneditable from Recent (tap is a no-op).
+
+## 7e. Mobility (Pliability, Dr. Kuruc)
+
+Own discipline (`mobility`), surfaced via Home → Workout → Mobility. The Mobility picker hardcodes a list of plans; tapping one opens a read-only protocol view that lists the prescribed drills with their content (Targets / Dose / Setup / Execution / Cues / Why / Stop if). A single **Mark complete** button at the bottom logs the entire session — no per-exercise checkboxes (tracking is complete-or-not).
+
+Each session writes one `DrillResult` per drill in the plan, with `metric: 'complete'`, `value: 1`. Kuruc sessions therefore carry 4 stubs (one per exercise); Pliability carries 1.
+
+| plan id | name | drills | content |
+|---|---|---|---|
+| mobility-pliability | Pliability | 1 (`pliability-session`) | none — external app session, just tap to log |
+| mobility-kuruc | Dr. Kuruc | 4 (`kuruc-cool-kid`, `kuruc-tspine`, `kuruc-lat-stretch`, `kuruc-serratus`) | full Targets / Why / Setup / Execution / Dose / Cues / Stop |
+
+Both plans are `isActive: false` (kept off Home tiles); the Mobility picker hardcodes the list. Each picker row shows an "N today" badge for AM/PM cadence visibility.
+
+`headlineSummary` returns "Pliability" or "Dr. Kuruc" for mobility sessions. Mobility sessions count toward the habit heatmap. Sessions are uneditable from Recent (no structured drill flow to re-enter).
+
+**Source of truth:** `src/config/plans/mobility-kuruc.ts` is canonical for in-app rendering. `mobility-rehab-protocol.md` at the repo root is the human-readable reference. Edit both when Kuruc updates the prescription.
 
 ## 7d. Golf (Live / Practice, free-form)
 
@@ -392,6 +409,7 @@ Each milestone is independently demoable.
 | 2026-04-28 | Coaching discipline added: GOLFTEC lesson notes container with custom form (lesson title / coach / location / prep notes / flight patterns / resolution / actions / drills assigned / summary). Single record progressively filled across pre- and post-lesson moments. Drills assigned stored as `N` rows of `metric: 'drill_assigned'` with `text`. Excluded from heatmap (lessons aren't practice); counts toward today badge. **Editable from Recent** (unique among free-form disciplines) so post-lesson sections can be filled in after the lesson. Pre-session form shows last lesson's summary + actions + drills at the top for review | Lesson notes need persistence between coaching sessions and a tight loop with practice; the prep-review card collapses the "find last session in another app" step. Edit support is required because the use case is by definition multi-touch (prep → save → return after lesson → fill post-fields). Multiple drill rows over a single newline-joined string preserves structure for future surfacing in practice flows |
 | 2026-04-28 | Coaching button on Home opens a list screen (green "Add session +" CTA + cards for past sessions) rather than jumping straight into the new-session form. Tapping a card opens a read-only `CoachingView`. Save returns to the list. Recent on Home still routes to edit | The list is the natural archive UX — past lessons are reference material, not data to re-enter. Keeping Recent → edit preserves the post-lesson fill-in path; the list adds a discoverable browse path without breaking it |
 | 2026-04-29 | JSON export + import added in Settings ("Backup & restore" section). Schema-tagged wrapper `{ schema: "practice-tracker.v1", exportedAt, sessions }`. Import default = skip duplicates by `id`; opt-in `Replace all data` checkbox flips the Import button red and gates behind a `window.confirm`. Per-record validation rejects malformed sessions; toast reports `Imported N · skipped M duplicates · K malformed`. `Attachment.blob` deliberately not serialized (always empty in v1) | Markdown/CSV are coaching-share formats and are lossy (per existing open items: CSV drops `DrillResult.text`); a real backup/restore needs full-fidelity roundtrip. JSON is whole-DB so it sits outside the range-scoped Export section. Skip-duplicates is the safe default for "restore after partial loss"; replace-all covers the "fresh device" case explicitly |
+| 2026-05-07 | Mobility added as its own discipline with two plans (`mobility-pliability`, `mobility-kuruc`). Surfaced via Home → Workout → Mobility (NOT a Home tile); the `workout-mobility` row in the Workout picker now navigates to a Mobility picker instead of logging. Each plan opens a read-only protocol view rendering its drills with structured content fields (Targets/Why/Setup/Execution/Dose/Cues/Stop), and a single "Mark complete" button. Sessions write one `DrillResult` per drill in the plan (`metric: 'complete'`, `value: 1`); Kuruc → 4 stubs, Pliability → 1 stub. `DrillDef` extended with optional `content?: DrillContent` (all-optional structured prose; existing drills unaffected). `headlineSummary` returns plan name for mobility sessions. Sessions feed the heatmap and are uneditable from Recent. Mobility plans are `isActive: false` so they stay off Home; the picker hardcodes the list (same trick PuttingPicker uses for indoor/outdoor) | Three-week Kuruc rehab protocol (May 7 – May 27) needs an in-app reference at the green/floor — markdown reference at the repo root isn't usable mid-session. Promoting Mobility to its own discipline (vs. nesting under Workout's data model) keeps the existing flat `Plan.phases[0].drills` shape intact and reuses the picker pattern. Twice-daily cadence handled by NOT dimming on second tap; "N today" badge on each picker row gives AM/PM visibility without enforcing a count |
 
 ## 13. Open items
 

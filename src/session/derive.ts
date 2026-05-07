@@ -120,6 +120,7 @@ export function exportHeadline(session: Session): string {
 export function headlineSummary(session: Session): string {
   if (session.disciplineId === 'golf') return golfSummary(session)
   if (session.disciplineId === 'coaching') return coachingSummary(session)
+  if (session.disciplineId === 'mobility') return mobilitySummary(session)
   if (session.planId === 'putting-outdoor-p1') {
     const parts = outdoorHeadlineParts(session, (r) => `${r.value}/${r.denominator}`)
     if (parts.length === 0) return session.drills.length === 0 ? session.notes || 'Logged' : `${session.drills.length} metrics`
@@ -184,6 +185,12 @@ function golfSummary(session: Session): string {
     parts.push(`${holes}h`)
   }
   return parts.join(' · ')
+}
+
+function mobilitySummary(session: Session): string {
+  if (session.planId === 'mobility-kuruc') return 'Dr. Kuruc'
+  if (session.planId === 'mobility-pliability') return 'Pliability'
+  return 'Mobility'
 }
 
 function coachingSummary(session: Session): string {

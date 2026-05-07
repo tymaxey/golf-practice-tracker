@@ -23,6 +23,7 @@ import {
 import { Drill } from '@/screens/Drill'
 import { GolfForm, GolfPicker, type GolfFormData } from '@/screens/Golf'
 import { Home } from '@/screens/Home'
+import { MobilityProtocol } from '@/screens/MobilityProtocol'
 import { Review } from '@/screens/Review'
 import { Settings } from '@/screens/Settings'
 import {
@@ -40,6 +41,8 @@ type Screen =
   | { kind: 'home' }
   | { kind: 'settings' }
   | { kind: 'workout' }
+  | { kind: 'mobility-picker' }
+  | { kind: 'mobility-protocol'; planId: string }
   | { kind: 'putting-picker' }
   | { kind: 'golf-picker' }
   | { kind: 'golf-form'; drillId: 'golf-live' | 'golf-practice' }
@@ -236,10 +239,46 @@ export default function App() {
     setScreen({ kind: 'home' })
   }
 
+  const saveMobility = async (planId: string) => {
+    if (saving) return
+    const plan = getPlan(planId)
+    const phase = plan?.phases[0]
+    if (!plan || !phase) return
+    setSaving(true)
+    try {
+      const now = new Date().toISOString()
+      const drillResults = phase.protocol.drills.map((d) => ({
+        drillDefId: d.id,
+        metric: 'complete',
+        label: d.name,
+        value: 1,
+      }))
+      await createSession({
+        startedAt: now,
+        endedAt: now,
+        disciplineId: plan.disciplineId,
+        planId: plan.id,
+        phaseId: phase.id,
+        notes: '',
+        drills: drillResults,
+      })
+      setSessions(await listSessions())
+      setToast(`Logged ${plan.name}`)
+      setScreen({ kind: 'home' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const openEdit = async (id: string) => {
     const s = await getSession(id)
     if (!s) return
-    if (s.disciplineId === 'workout' || s.disciplineId === 'golf') return
+    if (
+      s.disciplineId === 'workout' ||
+      s.disciplineId === 'golf' ||
+      s.disciplineId === 'mobility'
+    )
+      return
     if (s.disciplineId === 'coaching') {
       setScreen({ kind: 'coaching-edit', editingId: id })
       return
@@ -376,7 +415,33 @@ export default function App() {
         <WorkoutPicker
           drills={drillsForPlan('workout')}
           onBack={goHome}
-          onPick={logWorkout}
+          onPick={(drill) => {
+            if (drill.id === 'workout-mobility') {
+              setScreen({ kind: 'mobility-picker' })
+              return
+            }
+            logWorkout(drill.name)
+          }}
+        />
+      )}
+
+      {screen.kind === 'mobility-picker' && (
+        <MobilityPicker
+          sessions={sessions}
+          onBack={() => setScreen({ kind: 'workout' })}
+          onPick={(planId) =>
+            setScreen({ kind: 'mobility-protocol', planId })
+          }
+        />
+      )}
+
+      {screen.kind === 'mobility-protocol' && (
+        <MobilityProtocolScreen
+          planId={screen.planId}
+          sessions={sessions}
+          saving={saving}
+          onBack={() => setScreen({ kind: 'mobility-picker' })}
+          onComplete={() => saveMobility(screen.planId)}
         />
       )}
 
@@ -552,7 +617,7 @@ function CoachingViewScreen({
 type WorkoutPickerProps = {
   drills: DrillDef[]
   onBack: () => void
-  onPick: (optionName: string) => void
+  onPick: (drill: DrillDef) => void
 }
 
 function WorkoutPicker({ drills, onBack, onPick }: WorkoutPickerProps) {
@@ -574,7 +639,7 @@ function WorkoutPicker({ drills, onBack, onPick }: WorkoutPickerProps) {
           <button
             key={drill.id}
             type="button"
-            onClick={() => onPick(drill.name)}
+            onClick={() => onPick(drill)}
             className="tap flex w-full flex-col gap-1 rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
           >
             <span className="text-base font-semibold">{drill.name}</span>
@@ -582,6 +647,102 @@ function WorkoutPicker({ drills, onBack, onPick }: WorkoutPickerProps) {
         ))}
       </section>
     </div>
+  )
+}
+
+const MOBILITY_OPTIONS: { planId: string }[] = [
+  { planId: 'mobility-pliability' },
+  { planId: 'mobility-kuruc' },
+]
+
+type MobilityPickerProps = {
+  sessions: Session[]
+  onBack: () => void
+  onPick: (planId: string) => void
+}
+
+function MobilityPicker({ sessions, onBack, onPick }: MobilityPickerProps) {
+  return (
+    <div className="mx-auto flex min-h-full max-w-md flex-col gap-5 px-5 pb-24 pt-3">
+      <header className="flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="tap -ml-2 self-start px-2 text-sm text-ink-400 active:text-ink-200"
+        >
+          ← Workout
+        </button>
+        <h1 className="text-xl font-semibold">Mobility</h1>
+      </header>
+
+      <section className="flex flex-col gap-3">
+        {MOBILITY_OPTIONS.map((opt) => {
+          const plan = getPlan(opt.planId)
+          if (!plan) return null
+          const todayCount = sessions.filter(
+            (s) => s.planId === opt.planId && isSameDay(new Date(s.startedAt), new Date()),
+          ).length
+          return (
+            <button
+              key={opt.planId}
+              type="button"
+              onClick={() => onPick(opt.planId)}
+              className="tap flex w-full items-baseline justify-between gap-3 rounded-2xl border-2 border-accent-500 px-5 py-4 text-left text-ink-200 active:bg-ink-900"
+            >
+              <span className="text-base font-semibold">{plan.name}</span>
+              <span className="text-xs uppercase tracking-wide text-ink-400 tabular-nums">
+                {todayCount} today
+              </span>
+            </button>
+          )
+        })}
+      </section>
+    </div>
+  )
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+type MobilityProtocolScreenProps = {
+  planId: string
+  sessions: Session[]
+  saving: boolean
+  onBack: () => void
+  onComplete: () => void
+}
+
+function MobilityProtocolScreen({
+  planId,
+  sessions,
+  saving,
+  onBack,
+  onComplete,
+}: MobilityProtocolScreenProps) {
+  const plan = getPlan(planId)
+  if (!plan) {
+    return (
+      <div className="mx-auto max-w-md px-5 pt-3 text-sm text-ink-400">
+        Plan not found.
+      </div>
+    )
+  }
+  const todayCount = sessions.filter(
+    (s) => s.planId === planId && isSameDay(new Date(s.startedAt), new Date()),
+  ).length
+  return (
+    <MobilityProtocol
+      plan={plan}
+      saving={saving}
+      todayCount={todayCount}
+      onBack={onBack}
+      onComplete={onComplete}
+    />
   )
 }
 
