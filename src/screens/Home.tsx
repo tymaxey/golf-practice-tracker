@@ -183,18 +183,22 @@ function RecentSessionCard({
     onOpen()
   }
 
+  const showDelete = isOpen || offset < 0
+
   return (
     <li className="relative overflow-hidden rounded-xl">
-      <button
-        type="button"
-        onClick={onDelete}
-        aria-label="Delete session"
-        tabIndex={isOpen ? 0 : -1}
-        style={{ zIndex: 0 }}
-        className="absolute inset-y-0 right-0 flex w-[88px] items-center justify-center bg-red-500 text-sm font-semibold text-ink-950 active:opacity-80"
-      >
-        Delete
-      </button>
+      {showDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label="Delete session"
+          tabIndex={isOpen ? 0 : -1}
+          style={{ zIndex: 0 }}
+          className="absolute inset-y-0 right-0 flex w-[88px] items-center justify-center bg-red-500 text-sm font-semibold text-ink-950 active:opacity-80"
+        >
+          Delete
+        </button>
+      )}
 
       <button
         type="button"
