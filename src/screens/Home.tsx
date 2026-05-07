@@ -190,6 +190,7 @@ function RecentSessionCard({
         onClick={onDelete}
         aria-label="Delete session"
         tabIndex={isOpen ? 0 : -1}
+        style={{ zIndex: 0 }}
         className="absolute inset-y-0 right-0 flex w-[88px] items-center justify-center bg-red-500 text-sm font-semibold text-ink-950 active:opacity-80"
       >
         Delete
@@ -206,6 +207,8 @@ function RecentSessionCard({
           transform: `translate3d(${offset}px, 0, 0)`,
           transition: dragging ? 'none' : 'transform 200ms ease-out',
           touchAction: 'pan-y',
+          willChange: 'transform',
+          zIndex: 1,
         }}
         className="tap relative flex w-full flex-col gap-2 bg-ink-900 p-4 text-left active:bg-ink-800"
       >
